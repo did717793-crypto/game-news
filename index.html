@@ -169,16 +169,16 @@
       border-radius: 20px; padding: 6px 18px; font-size: 13px; font-weight: 600;
       cursor: pointer; transition: all 0.15s;
     }
-    .tab-btn[data-cat="\uc804\uccb4"]:hover { border-color: #6c5ce7; color: #6c5ce7; }
-    .tab-btn[data-cat="\uc804\uccb4"].active { background: #6c5ce7; color: #fff; border-color: #6c5ce7; }
-    .tab-btn[data-cat="\uc2e0\uc791"]:hover { border-color: #0984e3; color: #0984e3; }
-    .tab-btn[data-cat="\uc2e0\uc791"].active { background: #0984e3; color: #fff; border-color: #0984e3; }
-    .tab-btn[data-cat="\uac8c\uc784\uc18c\uc2dd"]:hover { border-color: #00b894; color: #00b894; }
-    .tab-btn[data-cat="\uac8c\uc784\uc18c\uc2dd"].active { background: #00b894; color: #fff; border-color: #00b894; }
-    .tab-btn[data-cat="\ud68c\uc0ac\ub3d9\ud5a5"]:hover { border-color: #6c5ce7; color: #6c5ce7; }
-    .tab-btn[data-cat="\ud68c\uc0ac\ub3d9\ud5a5"].active { background: #6c5ce7; color: #fff; border-color: #6c5ce7; }
-    .tab-btn[data-cat="\uc77c\ubc18"]:hover { border-color: #636e72; color: #636e72; }
-    .tab-btn[data-cat="\uc77c\ubc18"].active { background: #636e72; color: #fff; border-color: #636e72; }
+    .tab-all:hover  { border-color: #6c5ce7; color: #6c5ce7; }
+    .tab-all.active { background: #6c5ce7; color: #fff; border-color: #6c5ce7; }
+    .tab-new:hover  { border-color: #0984e3; color: #0984e3; }
+    .tab-new.active { background: #0984e3; color: #fff; border-color: #0984e3; }
+    .tab-game:hover  { border-color: #00b894; color: #00b894; }
+    .tab-game.active { background: #00b894; color: #fff; border-color: #00b894; }
+    .tab-co:hover   { border-color: #6c5ce7; color: #6c5ce7; }
+    .tab-co.active  { background: #6c5ce7; color: #fff; border-color: #6c5ce7; }
+    .tab-gen:hover  { border-color: #636e72; color: #636e72; }
+    .tab-gen.active { background: #636e72; color: #fff; border-color: #636e72; }
 
     /* === Article List === */
     .article-wrap { padding: 16px 28px 40px; }
@@ -377,11 +377,11 @@
   <input type="text" id="searchInput" class="search-input" placeholder="&#128269; 기사 제목 검색..." />
 </div>
 <div class="tab-bar" id="tabBar">
-  <button class="tab-btn active" data-cat="전체">전체</button>
-  <button class="tab-btn" data-cat="신작">신작 소식</button>
-  <button class="tab-btn" data-cat="게임소식">게임 소식</button>
-  <button class="tab-btn" data-cat="회사동향">게임 회사 동향</button>
-  <button class="tab-btn" data-cat="일반">일반</button>
+  <button class="tab-btn tab-all active" data-cat="전체">전체</button>
+  <button class="tab-btn tab-new" data-cat="신작">신작 소식</button>
+  <button class="tab-btn tab-game" data-cat="게임소식">게임 소식</button>
+  <button class="tab-btn tab-co" data-cat="회사동향">게임 회사 동향</button>
+  <button class="tab-btn tab-gen" data-cat="일반">일반</button>
 </div>
 
 <div class="article-wrap" id="articleWrap">
@@ -568,8 +568,8 @@
     if (!items.length){showEmpty("\uc870\uac74\uc5d0 \ub9de\ub294 \uae30\uc0ac\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.");return;}
     wrap.innerHTML="";
     items.forEach(function(art){
-      var bodyText=stripHtml(art.summary||"");
-      if (!bodyText.trim()) bodyText="(\uae30\uc0ac \ubcf8\ubb38 \uc694\uc57d \uc5c6\uc74c)";
+      var bodyText=(art.body||"").trim()||stripHtml(art.summary||"").trim();
+      if (!bodyText) bodyText="(\uae30\uc0ac \ubcf8\ubb38 \uc694\uc57d \uc5c6\uc74c)";
       var item=document.createElement("div"); item.className="article-item";
       item.innerHTML=
         '<div class="article-row">'+

@@ -13,6 +13,7 @@ import os
 import re
 import json
 import subprocess
+import concurrent.futures
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -705,16 +706,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       border-radius: 20px; padding: 6px 18px; font-size: 13px; font-weight: 600;
       cursor: pointer; transition: all 0.15s;
     }
-    .tab-btn[data-cat="\uc804\uccb4"]:hover { border-color: #6c5ce7; color: #6c5ce7; }
-    .tab-btn[data-cat="\uc804\uccb4"].active { background: #6c5ce7; color: #fff; border-color: #6c5ce7; }
-    .tab-btn[data-cat="\uc2e0\uc791"]:hover { border-color: #0984e3; color: #0984e3; }
-    .tab-btn[data-cat="\uc2e0\uc791"].active { background: #0984e3; color: #fff; border-color: #0984e3; }
-    .tab-btn[data-cat="\uac8c\uc784\uc18c\uc2dd"]:hover { border-color: #00b894; color: #00b894; }
-    .tab-btn[data-cat="\uac8c\uc784\uc18c\uc2dd"].active { background: #00b894; color: #fff; border-color: #00b894; }
-    .tab-btn[data-cat="\ud68c\uc0ac\ub3d9\ud5a5"]:hover { border-color: #6c5ce7; color: #6c5ce7; }
-    .tab-btn[data-cat="\ud68c\uc0ac\ub3d9\ud5a5"].active { background: #6c5ce7; color: #fff; border-color: #6c5ce7; }
-    .tab-btn[data-cat="\uc77c\ubc18"]:hover { border-color: #636e72; color: #636e72; }
-    .tab-btn[data-cat="\uc77c\ubc18"].active { background: #636e72; color: #fff; border-color: #636e72; }
+    .tab-all:hover  { border-color: #6c5ce7; color: #6c5ce7; }
+    .tab-all.active { background: #6c5ce7; color: #fff; border-color: #6c5ce7; }
+    .tab-new:hover  { border-color: #0984e3; color: #0984e3; }
+    .tab-new.active { background: #0984e3; color: #fff; border-color: #0984e3; }
+    .tab-game:hover  { border-color: #00b894; color: #00b894; }
+    .tab-game.active { background: #00b894; color: #fff; border-color: #00b894; }
+    .tab-co:hover   { border-color: #6c5ce7; color: #6c5ce7; }
+    .tab-co.active  { background: #6c5ce7; color: #fff; border-color: #6c5ce7; }
+    .tab-gen:hover  { border-color: #636e72; color: #636e72; }
+    .tab-gen.active { background: #636e72; color: #fff; border-color: #636e72; }
 
     /* === Article List === */
     .article-wrap { padding: 16px 28px 40px; }
@@ -913,11 +914,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <input type="text" id="searchInput" class="search-input" placeholder="&#128269; 기사 제목 검색..." />
 </div>
 <div class="tab-bar" id="tabBar">
-  <button class="tab-btn active" data-cat="전체">전체</button>
-  <button class="tab-btn" data-cat="신작">신작 소식</button>
-  <button class="tab-btn" data-cat="게임소식">게임 소식</button>
-  <button class="tab-btn" data-cat="회사동향">게임 회사 동향</button>
-  <button class="tab-btn" data-cat="일반">일반</button>
+  <button class="tab-btn tab-all active" data-cat="전체">전체</button>
+  <button class="tab-btn tab-new" data-cat="신작">신작 소식</button>
+  <button class="tab-btn tab-game" data-cat="게임소식">게임 소식</button>
+  <button class="tab-btn tab-co" data-cat="회사동향">게임 회사 동향</button>
+  <button class="tab-btn tab-gen" data-cat="일반">일반</button>
 </div>
 
 <div class="article-wrap" id="articleWrap">
@@ -1104,8 +1105,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!items.length){showEmpty("\uc870\uac74\uc5d0 \ub9de\ub294 \uae30\uc0ac\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.");return;}
     wrap.innerHTML="";
     items.forEach(function(art){
-      var bodyText=stripHtml(art.summary||"");
-      if (!bodyText.trim()) bodyText="(\uae30\uc0ac \ubcf8\ubb38 \uc694\uc57d \uc5c6\uc74c)";
+      var bodyText=(art.body||"").trim()||stripHtml(art.summary||"").trim();
+      if (!bodyText) bodyText="(\uae30\uc0ac \ubcf8\ubb38 \uc694\uc57d \uc5c6\uc74c)";
       var item=document.createElement("div"); item.className="article-item";
       item.innerHTML=
         '<div class="article-row">'+
@@ -1270,6 +1271,7 @@ def _make_articles_data() -> list:
             "title":           art.get("title", ""),
             "url":             art.get("url", ""),
             "summary":         art.get("summary", ""),
+            "body":            art.get("body_text", ""),
             "category":        art.get("cat_html", "일반"),
             "is_domestic":     art.get("is_domestic", True),
             "is_ruliweb_best": art.get("is_ruliweb_best", False),
@@ -1333,6 +1335,53 @@ def update_dates_json(max_days: int = 30):
     print(f"  dates.json 업데이트: {len(dates)}개 날짜")
 
 
+def fetch_article_body(url: str, timeout: int = 6) -> str:
+    """기사 원문 URL에서 본문 텍스트 추출 (최대 600자)"""
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=timeout, allow_redirects=True)
+        r.raise_for_status()
+        soup = BeautifulSoup(r.text, "lxml")
+        for tag in soup(["script", "style", "nav", "header", "footer", "aside"]):
+            tag.decompose()
+        # 사이트별 본문 셀렉터 우선 시도
+        for sel in [
+            "article", ".article-body", ".article_body", "#articleBody",
+            "#articleBodyContents", ".news_end", ".view-content",
+            ".article-content", ".post-content", ".entry-content", "main"
+        ]:
+            el = soup.select_one(sel)
+            if el:
+                text = clean(el.get_text(separator=" "))
+                if len(text) > 80:
+                    return text[:600]
+        # 폴백: <p> 태그 모음
+        paras = [clean(p.get_text()) for p in soup.select("p") if len(p.get_text().strip()) > 40]
+        if paras:
+            return " ".join(paras[:4])[:600]
+        return ""
+    except Exception:
+        return ""
+
+
+def enrich_articles_body():
+    """수집된 기사 본문을 병렬로 fetch (최대 5 workers, 상위 80건)"""
+    targets = ARTICLES[:80]  # score 정렬 전이므로 앞쪽 80개
+    print(f"  본문 보강 중 ({len(targets)}건, 병렬 5)...")
+
+    def _fetch(art):
+        if art.get("body_text"):
+            return
+        body = fetch_article_body(art["url"])
+        if body:
+            art["body_text"] = body
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as ex:
+        list(ex.map(_fetch, targets))
+
+    filled = sum(1 for a in targets if a.get("body_text"))
+    print(f"  본문 보강 완료: {filled}/{len(targets)}건")
+
+
 def push_github(content_date: datetime):
     try:
         os.chdir(GITHUB_DIR)
@@ -1364,6 +1413,10 @@ def main():
     if not ARTICLES:
         print("[ERROR] 수집된 기사 없음. 종료.")
         return
+
+    # 1-1. 본문 보강 (병렬 fetch)
+    print("\n[1-1] 기사 본문 보강")
+    enrich_articles_body()
 
     # 2. XLSX 저장 (전일 날짜 기준)
     print("\n[2/4] XLSX 저장")
