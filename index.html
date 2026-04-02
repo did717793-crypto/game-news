@@ -378,9 +378,9 @@
 </div>
 <div class="tab-bar" id="tabBar">
   <button class="tab-btn tab-all active" data-cat="전체">전체</button>
-  <button class="tab-btn tab-new" data-cat="신작">신작 소식</button>
-  <button class="tab-btn tab-game" data-cat="게임소식">게임 소식</button>
-  <button class="tab-btn tab-co" data-cat="회사동향">게임 회사 동향</button>
+  <button class="tab-btn tab-new" data-cat="신작 소식">신작 소식</button>
+  <button class="tab-btn tab-game" data-cat="게임 소식">게임 소식</button>
+  <button class="tab-btn tab-co" data-cat="게임 회사 동향">게임 회사 동향</button>
   <button class="tab-btn tab-gen" data-cat="일반">일반</button>
 </div>
 
@@ -443,7 +443,7 @@
     return (tmp.textContent || tmp.innerText || "").trim();
   }
 
-  var CAT_CLS = {"\uc2e4\uc2dc":"bcat-new","\uac8c\uc784\uc18c\uc2dd":"bcat-game","\ud68c\uc0ac\ub3d9\ud5a5":"bcat-co","\uc77c\ubc18":"bcat-gen"};
+  var CAT_CLS = {"\uc2e0\uc791 \uc18c\uc2dd":"bcat-new","\uac8c\uc784 \uc18c\uc2dd":"bcat-game","\uac8c\uc784 \ud68c\uc0ac \ub3d9\ud5a5":"bcat-co","\uc77c\ubc18":"bcat-gen"};
   function catBadge(c) { return '<span class="badge '+(CAT_CLS[c]||"bcat-gen")+'">'+esc(c)+'</span>'; }
   function srcBadge(dom) { return '<span class="badge '+(dom?"bsrc-dom":"bsrc-ovs")+'">'+(dom?"\uad6d\ub0b4":"\ud574\uc678")+'</span>'; }
   function siteBadge(s) { return '<span class="badge bsite">'+esc(s)+'</span>'; }
@@ -610,7 +610,7 @@
     // Build date → articles map (신작 only, keyed by _fileDate)
     var newsMap={};
     DATA.forEach(function(art){
-      if (art.category!=="\uc2e0\uc791") return;
+      if (art.category!=="\uc2e0\uc791 \uc18c\uc2dd") return;
       var dateStr=art._fileDate||"";
       if (!dateStr) return;
       if (!newsMap[dateStr]) newsMap[dateStr]=[];
