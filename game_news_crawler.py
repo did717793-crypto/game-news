@@ -455,6 +455,25 @@ def run_all():
             art.get("views", 0),
         )
 
+    # 중요도 스코어 계산
+    HOT_KW = ["출시", "런칭", "서비스 시작", "사전예약", "인수", "합병", "파산",
+              "구조조정", "cbt", "obt", "신규 서버", "서비스 종료", "상장", "투자"]
+    CAT_W  = {"신작 소식": 30, "게임 회사 동향": 20, "게임 소식": 10, "일반": 0}
+    for art in ARTICLES:
+        s = 0
+        if art.get("is_ruliweb_best"):
+            s += 100
+        views = art.get("views", 0) or 0
+        if views >= RULIWEB_HOT_VIEWS:
+            s += min(int(views / 1000) * 5, 200)
+        s += CAT_W.get(art.get("cat_html", "일반"), 0)
+        title_lower = art.get("title", "").lower()
+        for kw in HOT_KW:
+            if kw in title_lower:
+                s += 15
+                break
+        art["_score"] = s
+
     print(f"\n  총 {len(ARTICLES)}개 기사 수집 완료")
     by_cat = {}
     for art in ARTICLES:
