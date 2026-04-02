@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ê²ì ìê³ ëí¥</title>
+  <title>게임 업계 동향</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -229,27 +229,27 @@
 <body>
 
 <header class="g-header">
-  <div class="logo">&#127918; ê²ì ìê³ ëí¥</div>
+  <div class="logo">&#127918; 게임 업계 동향</div>
   <div class="h-stat" id="hStats"></div>
 </header>
 
 <div class="date-bar">
-  <span class="date-label">&#128197; ê¸°ê°</span>
+  <span class="date-label">&#128197; 기간</span>
   <input type="date" id="dateFrom" class="date-input" />
   <span class="date-sep">~</span>
   <input type="date" id="dateTo" class="date-input" />
-  <button class="btn-load" id="btnLoad">ì¡°í</button>
-  <span class="date-hint">â» ìµë 1ê°ì</span>
+  <button class="btn-load" id="btnLoad">조회</button>
+  <span class="date-hint">※ 최대 1개월</span>
   <span class="date-err" id="dateErr" style="display:none"></span>
   <div class="date-quick">
-    <button class="q-btn active" data-days="0">ìµì </button>
-    <button class="q-btn" data-days="7">ìµê·¼ 7ì¼</button>
-    <button class="q-btn" data-days="30">ìµê·¼ 30ì¼</button>
+    <button class="q-btn active" data-days="0">최신</button>
+    <button class="q-btn" data-days="7">최근 7일</button>
+    <button class="q-btn" data-days="30">최근 30일</button>
   </div>
 </div>
 
 <section class="hero-sec">
-  <div class="sec-eyebrow">&#128293; ì£¼ëª© ê¸°ì¬ TOP 5</div>
+  <div class="sec-eyebrow">&#128293; 주목 기사 TOP 5</div>
   <div class="carousel-outer">
     <button class="car-btn" id="carPrev">&#8249;</button>
     <div class="carousel-viewport" id="carouselVP">
@@ -261,27 +261,27 @@
 </section>
 
 <div class="search-bar">
-  <input type="text" id="searchInput" class="search-input" placeholder="&#128269; ê¸°ì¬ ì ëª© ê²ì..." />
+  <input type="text" id="searchInput" class="search-input" placeholder="&#128269; 기사 제목 검색..." />
 </div>
 <div class="tab-bar" id="tabBar">
-  <button class="tab-btn active" data-cat="ì ì²´">ì ì²´</button>
-  <button class="tab-btn" data-cat="ì ì">ì ì ìì</button>
-  <button class="tab-btn" data-cat="ê²ììì">ê²ì ìì</button>
-  <button class="tab-btn" data-cat="íì¬ëí¥">ê²ì íì¬ ëí¥</button>
-  <button class="tab-btn" data-cat="ì¼ë°">ì¼ë°</button>
+  <button class="tab-btn active" data-cat="전체">전체</button>
+  <button class="tab-btn" data-cat="신작">신작 소식</button>
+  <button class="tab-btn" data-cat="게임소식">게임 소식</button>
+  <button class="tab-btn" data-cat="회사동향">게임 회사 동향</button>
+  <button class="tab-btn" data-cat="일반">일반</button>
 </div>
 
 <div class="article-wrap" id="articleWrap">
-  <div class="loading"><div class="loading-spinner"></div><div>ë°ì´í° ë¡ë© ì¤...</div></div>
+  <div class="loading"><div class="loading-spinner"></div><div>데이터 로딩 중...</div></div>
 </div>
 
-<footer class="g-footer">ìí¸ë°ì¤ ê²ì ìê³ ëí¥ &middot; ë§¤ì¼ 00:00 KST ìë ìì§ &middot; GitHub Pages ì ê³µ</footer>
+<footer class="g-footer">엔트런스 게임 업계 동향 &middot; 매일 00:00 KST 자동 수집 &middot; GitHub Pages 제공</footer>
 
 <script>
 (function () {
   var DATA = [];
   var DATES = [];
-  var curCat = "ì ì²´";
+  var curCat = "전체";
   var searchQ = "";
   var carIdx = 0;
   var HERO = [];
@@ -300,9 +300,9 @@
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
-  var CAT_CLS = { "ì ì": "bcat-new", "ê²ììì": "bcat-game", "íì¬ëí¥": "bcat-co", "ì¼ë°": "bcat-gen" };
+  var CAT_CLS = { "신작": "bcat-new", "게임소식": "bcat-game", "회사동향": "bcat-co", "일반": "bcat-gen" };
   function catBadge(c) { return '<span class="badge ' + (CAT_CLS[c] || "bcat-gen") + '">' + esc(c) + '</span>'; }
-  function srcBadge(dom) { return '<span class="badge ' + (dom ? "bsrc-dom" : "bsrc-ovs") + '">' + (dom ? "êµ­ë´" : "í´ì¸") + '</span>'; }
+  function srcBadge(dom) { return '<span class="badge ' + (dom ? "bsrc-dom" : "bsrc-ovs") + '">' + (dom ? "국내" : "해외") + '</span>'; }
   function siteBadge(s) { return '<span class="badge bsite">' + esc(s) + '</span>'; }
   function viewBadge(v) { return v ? '<span class="badge bview">&#128065; ' + v.toLocaleString() + '</span>' : ""; }
   function hotBadge(h) { return h ? '<span class="badge bhot">&#128293;HOT</span>' : ""; }
@@ -312,7 +312,7 @@
       .then(function (r) { return r.json(); })
       .then(function (j) {
         DATES = j.dates || [];
-        if (!DATES.length) { showEmpty("ìì§ë ë°ì´í°ê° ììµëë¤."); return; }
+        if (!DATES.length) { showEmpty("수집된 데이터가 없습니다."); return; }
         var latest = DATES[0];
         var oldest = DATES[DATES.length - 1];
         ["dateFrom", "dateTo"].forEach(function (id) {
@@ -323,17 +323,17 @@
         document.getElementById("dateTo").value = latest;
         loadRange(latest, latest);
       })
-      .catch(function () { showEmpty("dates.json ë¡ë ì¤í¨ â í¬ë¡¤ë¬ë¥¼ ë¨¼ì  ì¤íí´ ì£¼ì¸ì."); });
+      .catch(function () { showEmpty("dates.json 로드 실패 — 크롤러를 먼저 실행해 주세요."); });
   }
 
   function loadRange(fromStr, toStr) {
-    document.getElementById("articleWrap").innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>ë¡ë© ì¤...</div></div>';
+    document.getElementById("articleWrap").innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>로딩 중...</div></div>';
     document.getElementById("hStats").textContent = "";
     DATA = [];
     var from = parseKST(fromStr), to = parseKST(toStr);
     if (from > to) { var t = from; from = to; to = t; }
     var targets = DATES.filter(function (d) { var dt = parseKST(d); return dt >= from && dt <= to; });
-    if (!targets.length) { showEmpty("ì íí ê¸°ê°ì ìì§ë ë°ì´í°ê° ììµëë¤."); return; }
+    if (!targets.length) { showEmpty("선택한 기간에 수집된 데이터가 없습니다."); return; }
     var done = 0;
     targets.forEach(function (d) {
       fetch("data/" + d + ".json?v=" + Date.now())
@@ -349,7 +349,7 @@
     HERO = DATA.slice(0, 5);
     renderCarousel();
     renderList();
-    document.getElementById("hStats").innerHTML = "ì´ <b>" + DATA.length + "</b>ê±´";
+    document.getElementById("hStats").innerHTML = "총 <b>" + DATA.length + "</b>건";
   }
 
   function renderCarousel() {
@@ -365,7 +365,7 @@
         '<div class="hero-rank ' + rc + '">' + (i + 1) + '</div>' +
         '<div class="hero-title">' + esc(art.title) + '</div>' +
         '<div class="hero-meta">' + catBadge(art.category) + " " + srcBadge(art.is_domestic) + " " + siteBadge(art.site) + " " + viewBadge(art.views) + " " + hotBadge(art.is_ruliweb_best) + '</div>' +
-        '<a class="hero-link" href="' + esc(art.url) + '" target="_blank" rel="noopener">ê¸°ì¬ ìë¬¸ë³´ê¸° &#8594;</a>';
+        '<a class="hero-link" href="' + esc(art.url) + '" target="_blank" rel="noopener">기사 원문보기 &#8594;</a>';
       track.appendChild(card);
       var dot = document.createElement("div");
       dot.className = "car-dot" + (i === 0 ? " active" : "");
@@ -401,7 +401,7 @@
 
   function getFiltered() {
     return DATA.filter(function (a) {
-      return (curCat === "ì ì²´" || a.category === curCat) &&
+      return (curCat === "전체" || a.category === curCat) &&
              (!searchQ || a.title.toLowerCase().indexOf(searchQ) !== -1);
     });
   }
@@ -409,7 +409,7 @@
   function renderList() {
     var wrap = document.getElementById("articleWrap");
     var items = getFiltered();
-    if (!items.length) { showEmpty("ì¡°ê±´ì ë§ë ê¸°ì¬ê° ììµëë¤."); return; }
+    if (!items.length) { showEmpty("조건에 맞는 기사가 없습니다."); return; }
     wrap.innerHTML = "";
     items.forEach(function (art) {
       var item = document.createElement("div");
@@ -420,13 +420,13 @@
           '<div class="art-title">' + esc(art.title) + '</div>' +
           '<div class="art-actions">' +
             viewBadge(art.views) +
-            ' <a class="btn-url" href="' + esc(art.url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">ê¸°ì¬ ìë¬¸ë³´ê¸°</a>' +
+            ' <a class="btn-url" href="' + esc(art.url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">기사 원문보기</a>' +
             ' <span class="art-expand-icon">&#9660;</span>' +
           '</div>' +
         '</div>' +
         '<div class="art-body">' +
           '<div class="art-site">' + esc(art.site) + (art.collected_at ? " &middot; " + esc(art.collected_at) : "") + '</div>' +
-          '<div class="art-body-text">' + esc(art.summary || "(ë³¸ë¬¸ ìì)") + '</div>' +
+          '<div class="art-body-text">' + esc(art.summary || "(본문 없음)") + '</div>' +
         '</div>';
       item.querySelector(".article-row").addEventListener("click", function (e) {
         if (e.target.classList.contains("btn-url") || e.target.closest(".btn-url")) return;
@@ -459,9 +459,9 @@
     var from = document.getElementById("dateFrom").value;
     var to = document.getElementById("dateTo").value;
     var errEl = document.getElementById("dateErr");
-    if (!from || !to) { errEl.textContent = "ë ì§ë¥¼ ì íí´ ì£¼ì¸ì."; errEl.style.display = ""; return; }
+    if (!from || !to) { errEl.textContent = "날짜를 선택해 주세요."; errEl.style.display = ""; return; }
     if (daysBetween(parseKST(from), parseKST(to)) > 30) {
-      errEl.textContent = "ìµë 30ì¼ê¹ì§ ì¡°í ê°ë¥í©ëë¤."; errEl.style.display = ""; return;
+      errEl.textContent = "최대 30일까지 조회 가능합니다."; errEl.style.display = ""; return;
     }
     errEl.style.display = "none";
     document.querySelectorAll(".q-btn").forEach(function (b) { b.classList.remove("active"); });
