@@ -522,7 +522,12 @@
   }
 
   function onReady() {
-    DATA.sort(function(a,b){return (b.score||0)-(a.score||0);});
+    var CAT_ORDER={"\uc2e0\uc791 \uc18c\uc2dd":1,"\uac8c\uc784 \ud68c\uc0ac \ub3d9\ud5a5":2,"\uac8c\uc784 \uc18c\uc2dd":3,"\uc77c\ubc18":4};
+    DATA.sort(function(a,b){
+      var sd=(b.score||0)-(a.score||0);
+      if(sd!==0) return sd;
+      return (CAT_ORDER[a.category]||5)-(CAT_ORDER[b.category]||5);
+    });
     HERO=DATA.slice(0,5);
     renderCarousel();
     renderList();
@@ -778,6 +783,8 @@ def _make_articles_data() -> list:
             "comments":        art.get("comments", 0),
             "collected_at":    art.get("collected_at", ""),
             "score":           art.get("_score", 0),
+            "site_cnt":        art.get("_site_cnt", 1),
+            "content_score":   art.get("_content_score", 1),
         })
     return result
 

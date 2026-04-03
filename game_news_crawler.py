@@ -455,24 +455,62 @@ def run_all():
             art.get("views", 0),
         )
 
-    # 중요도 스코어 계산
-    HOT_KW = ["출시", "런칭", "서비스 시작", "사전예약", "인수", "합병", "파산",
-              "구조조정", "cbt", "obt", "신규 서버", "서비스 종료", "상장", "투자"]
-    CAT_W  = {"신작 소식": 30, "게임 회사 동향": 20, "게임 소식": 10, "일반": 0}
+    # ── 루리웹 BEST 비게임 기사 필터링 ──────────────────────────────────────
+    GAME_FILTER_KW = [
+        "게임", "모바일", "스팀", "콘솔", "플스", "엑박", "ps5", "ps4", "xbox",
+        "닌텐도", "서버", "패치", "업데이트", "출시", "런칭", "사전예약", "오픈",
+        "던파", "메이플", "로스트아크", "로아", "리니지", "오버워치", "롤",
+        "발로란트", "넥슨", "엔씨", "크래프톤", "카카오게임즈", "넷마블",
+        "펄어비스", "스마일게이트", "컴투스", "위메이드", "시프트업",
+        "배그", "배틀그라운드", "디아블로", "포트나이트", "마인크래프트",
+        "mmo", "rpg", "fps", "moba", "pc방", "e스포츠", "esports",
+    ]
+    ARTICLES[:] = [
+        a for a in ARTICLES
+        if not a.get("is_ruliweb_best")
+        or any(kw in a.get("title", "").lower() for kw in GAME_FILTER_KW)
+    ]
+
+    # ── 중요도 1순위: 크로스사이트 커버리지 (동일 기사 다룬 사이트 수) ────────
+    def _get_kw(title: str) -> set:
+        return set(re.findall(r"[가-힣a-zA-Z0-9]{2,}", title.lower()))
+
+    kw_list = [_get_kw(a.get("title", "")) for a in ARTICLES]
+    for i, art in enumerate(ARTICLES):
+        if not kw_list[i]:
+            art["_site_cnt"] = 1
+            continue
+        sites = {art.get("site", "")}
+        for j, other in enumerate(ARTICLES):
+            if i == j:
+                continue
+            overlap = kw_list[i] & kw_list[j]
+            if len(overlap) >= 3:           # 핵심 키워드 3개 이상 겹치면 동일 기사
+                sites.add(other.get("site", ""))
+        art["_site_cnt"] = len(sites)
+
+    # ── 중요도 2순위: 내용 중요도 ───────────────────────────────────────────
+    NEW_GAME_KW  = ["사전예약", "사전 등록", "오픈일", "그랜드 오픈", "신규 서버",
+                    "출시", "런칭", "오픈 확정", "서비스 시작", "cbt", "obt",
+                    "정식 서비스", "정식출시", "얼리 액세스"]
+    COMPANY_KW   = ["대규모 채용", "채용", "해고", "사직", "투자", "인수", "손익",
+                    "적자", "흑자", "구조조정", "합병", "파산", "상장", "인력 감축",
+                    "감원", "희망퇴직"]
+
     for art in ARTICLES:
-        s = 0
-        if art.get("is_ruliweb_best"):
-            s += 100
-        views = art.get("views", 0) or 0
-        if views >= RULIWEB_HOT_VIEWS:
-            s += min(int(views / 1000) * 5, 200)
-        s += CAT_W.get(art.get("cat_html", "일반"), 0)
         title_lower = art.get("title", "").lower()
-        for kw in HOT_KW:
+        content_score = 1
+        for kw in NEW_GAME_KW:
             if kw in title_lower:
-                s += 15
+                content_score = 5
                 break
-        art["_score"] = s
+        if content_score == 1:
+            for kw in COMPANY_KW:
+                if kw in title_lower:
+                    content_score = 4
+                    break
+        art["_content_score"] = content_score
+        art["_score"] = art["_site_cnt"] + content_score
 
     print(f"\n  총 {len(ARTICLES)}개 기사 수집 완료")
     by_cat = {}
@@ -1078,7 +1116,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function onReady() {
-    DATA.sort(function(a,b){return (b.score||0)-(a.score||0);});
+    var CAT_ORDER={"\uc2e0\uc791 \uc18c\uc2dd":1,"\uac8c\uc784 \ud68c\uc0ac \ub3d9\ud5a5":2,"\uac8c\uc784 \uc18c\uc2dd":3,"\uc77c\ubc18":4};
+    DATA.sort(function(a,b){
+      var sd=(b.score||0)-(a.score||0);
+      if(sd!==0) return sd;
+      return (CAT_ORDER[a.category]||5)-(CAT_ORDER[b.category]||5);
+    });
     HERO=DATA.slice(0,5);
     renderCarousel();
     renderList();
@@ -1334,6 +1377,8 @@ def _make_articles_data() -> list:
             "comments":        art.get("comments", 0),
             "collected_at":    art.get("collected_at", ""),
             "score":           art.get("_score", 0),
+            "site_cnt":        art.get("_site_cnt", 1),
+            "content_score":   art.get("_content_score", 1),
         })
     return result
 
