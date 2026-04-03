@@ -9,7 +9,7 @@ if not exist logs mkdir logs
 set LOGDATE=%date:~0,4%%date:~5,2%%date:~8,2%
 
 echo [%date% %time%] 크롤러 시작 >> logs\crawler_%LOGDATE%.log
-python game_news_crawler.py >> logs\crawler_%LOGDATE%.log 2>&1
+C:\Users\Admin\AppData\Local\Programs\Python\Python314\python.exe game_news_crawler.py >> logs\crawler_%LOGDATE%.log 2>&1
 echo [%date% %time%] 크롤러 종료 >> logs\crawler_%LOGDATE%.log
 
 :: 작업 스케줄러 등록 권장: 매일 00:00 KST 실행 (주말 포함)
