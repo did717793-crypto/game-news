@@ -439,7 +439,7 @@
 (function () {
   var DATA = [];
   var DATES = [];
-  var curCat = "\uc804\uccb4";
+  var curCat = "전체";
   var searchQ = "";
   var carIdx = 0;
   var HERO = [];
@@ -464,21 +464,21 @@
     return (tmp.textContent || tmp.innerText || "").trim();
   }
 
-  var CAT_CLS = {"\uc2e0\uc791 \uc18c\uc2dd":"bcat-new","\uac8c\uc784 \uc18c\uc2dd":"bcat-game","\uac8c\uc784 \ud68c\uc0ac \ub3d9\ud5a5":"bcat-co","\uc77c\ubc18":"bcat-gen"};
+  var CAT_CLS = {"신작 소식":"bcat-new","게임 소식":"bcat-game","게임 회사 동향":"bcat-co","일반":"bcat-gen"};
   function catBadge(c) { return '<span class="badge '+(CAT_CLS[c]||"bcat-gen")+'">'+esc(c)+'</span>'; }
-  function srcBadge(dom) { return '<span class="badge '+(dom?"bsrc-dom":"bsrc-ovs")+'">'+(dom?"\uad6d\ub0b4":"\ud574\uc678")+'</span>'; }
+  function srcBadge(dom) { return '<span class="badge '+(dom?"bsrc-dom":"bsrc-ovs")+'">'+(dom?"국내":"해외")+'</span>'; }
   function siteBadge(s) { return '<span class="badge bsite">'+esc(s)+'</span>'; }
   function viewBadge(v) { return v?'<span class="badge bview">&#128065; '+v.toLocaleString()+'</span>':""; }
   function hotBadge(h) { return h?'<span class="badge bhot">&#128293;HOT</span>':""; }
 
   function getEventType(title) {
     var t = (title||"").toLowerCase();
-    if (t.indexOf("\uc0ac\uc804\uc608\uc57d")!==-1) return "presale";
-    if (t.indexOf("cbt")!==-1||t.indexOf("\ud074\ub85c\uc988\ubca0\ud0c0")!==-1||t.indexOf("\ube44\uacf5\uac1c\ud14c\uc2a4\ud2b8")!==-1) return "cbt";
-    if (t.indexOf("\uc11c\ubc84\uc624\ud508")!==-1||t.indexOf("\uc11c\ubc84 \uc624\ud508")!==-1||t.indexOf("\uc2e0\uaddc \uc11c\ubc84")!==-1||t.indexOf("\uc2e0\uc11c\ubc84")!==-1) return "server";
+    if (t.indexOf("사전예약")!==-1) return "presale";
+    if (t.indexOf("cbt")!==-1||t.indexOf("클로즈베타")!==-1||t.indexOf("비공개테스트")!==-1) return "cbt";
+    if (t.indexOf("서버오픈")!==-1||t.indexOf("서버 오픈")!==-1||t.indexOf("신규 서버")!==-1||t.indexOf("신서버")!==-1) return "server";
     return "release";
   }
-  var EVT_LABELS = {release:"\ucd9c\uc2dc", presale:"\uc0ac\uc804\uc608\uc57d", cbt:"CBT", server:"\uc11c\ubc84\uc624\ud508"};
+  var EVT_LABELS = {release:"출시", presale:"사전예약", cbt:"CBT", server:"서버오픈"};
   var EVT_CLS   = {release:"event-release", presale:"event-presale", cbt:"event-cbt", server:"event-server"};
   var TAG_CLS   = {release:"tag-release",   presale:"tag-presale",   cbt:"tag-cbt",   server:"tag-server"};
 
@@ -488,7 +488,7 @@
       .then(function(r){return r.json();})
       .then(function(j){
         DATES = j.dates||[];
-        if (!DATES.length) { showEmpty("\uc218\uc9d1\ub41c \ub370\uc774\ud130\uac00 \uc5c6\uc2b5\ub2c8\ub2e4."); return; }
+        if (!DATES.length) { showEmpty("수집된 데이터가 없습니다."); return; }
         var latest=DATES[0], oldest=DATES[DATES.length-1];
         ["dateFrom","dateTo"].forEach(function(id){
           var el=document.getElementById(id); el.min=oldest; el.max=latest;
@@ -498,17 +498,17 @@
         var ld=parseKST(latest); calYear=ld.getFullYear(); calMonth=ld.getMonth();
         loadRange(latest,latest);
       })
-      .catch(function(){showEmpty("dates.json \ub85c\ub4dc \uc2e4\ud328 \u2014 \ud06c\ub864\ub7ec\ub97c \uba3c\uc800 \uc2e4\ud589\ud574 \uc8fc\uc138\uc694.");});
+      .catch(function(){showEmpty("dates.json 로드 실패 — 크롤러를 먼저 실행해 주세요.");});
   }
 
   function loadRange(fromStr,toStr) {
-    document.getElementById("articleWrap").innerHTML='<div class="loading"><div class="loading-spinner"></div><div>\ub85c\ub529 \uc911...</div></div>';
+    document.getElementById("articleWrap").innerHTML='<div class="loading"><div class="loading-spinner"></div><div>로딩 중...</div></div>';
     document.getElementById("hStats").textContent="";
     DATA=[];
     var from=parseKST(fromStr), to=parseKST(toStr);
     if (from>to){var t=from;from=to;to=t;}
     var targets=DATES.filter(function(d){var dt=parseKST(d);return dt>=from&&dt<=to;});
-    if (!targets.length){showEmpty("\uc120\ud0dd\ud55c \uae30\uac04\uc5d0 \uc218\uc9d1\ub41c \ub370\uc774\ud130\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.");return;}
+    if (!targets.length){showEmpty("선택한 기간에 수집된 데이터가 없습니다.");return;}
     var done=0;
     targets.forEach(function(d){
       (function(tag){
@@ -522,7 +522,7 @@
   }
 
   function onReady() {
-    var CAT_ORDER={"\uc2e0\uc791 \uc18c\uc2dd":1,"\uac8c\uc784 \ud68c\uc0ac \ub3d9\ud5a5":2,"\uac8c\uc784 \uc18c\uc2dd":3,"\uc77c\ubc18":4};
+    var CAT_ORDER={"신작 소식":1,"게임 회사 동향":2,"게임 소식":3,"일반":4};
     DATA.sort(function(a,b){
       var sd=(b.score||0)-(a.score||0);
       if(sd!==0) return sd;
@@ -531,7 +531,7 @@
     HERO=DATA.slice(0,5);
     renderCarousel();
     renderList();
-    document.getElementById("hStats").innerHTML="\uc218\uc9d1 <b>"+DATA.length+"</b>\uac74";
+    document.getElementById("hStats").innerHTML="수집 <b>"+DATA.length+"</b>건";
     renderCalendar();
   }
 
@@ -549,17 +549,17 @@
         '<div class="hero-rank '+rc+'">'+(i+1)+'</div>'+
         '<div class="hero-title">'+esc(art.title)+'</div>'+
         '<div class="hero-meta">'+catBadge(art.category)+" "+srcBadge(art.is_domestic)+" "+siteBadge(art.site)+" "+viewBadge(art.views)+" "+hotBadge(art.is_ruliweb_best)+'</div>'+
-        (hasBody?'<button class="hero-expand-btn">&#9660; \ubcf8\ubb38 \uc694\uc57d \ubcf4\uae30</button>'+
+        (hasBody?'<button class="hero-expand-btn">&#9660; 본문 요약 보기</button>'+
           '<div class="hero-body-wrap"><div class="hero-body-text">'+esc(bodyText)+'</div></div>':'')+
-        '<a class="hero-link" href="'+esc(art.url)+'" target="_blank" rel="noopener">\uae30\uc0ac \uc6d0\ubb38\ubcf4\uae30 &#8594;</a>';
+        '<a class="hero-link" href="'+esc(art.url)+'" target="_blank" rel="noopener">기사 원문보기 &#8594;</a>';
       var btn=card.querySelector(".hero-expand-btn");
       if(btn){
         btn.addEventListener("click",function(e){
           e.stopPropagation();
           card.classList.toggle("open");
           btn.textContent=card.classList.contains("open")
-            ?"\u25b2 \uc811\uae30"
-            :"\u25bc \ubcf8\ubb38 \uc694\uc57d \ubcf4\uae30";
+            ?"▲ 접기"
+            :"▼ 본문 요약 보기";
         });
       }
       track.appendChild(card);
@@ -600,17 +600,17 @@
   /* ── Article List ── */
   function getFiltered(){
     return DATA.filter(function(a){
-      return (curCat==="\uc804\uccb4"||a.category===curCat)&&(!searchQ||a.title.toLowerCase().indexOf(searchQ)!==-1);
+      return (curCat==="전체"||a.category===curCat)&&(!searchQ||a.title.toLowerCase().indexOf(searchQ)!==-1);
     });
   }
   function renderList(){
     var wrap=document.getElementById("articleWrap"), items=getFiltered();
-    if (!items.length){showEmpty("\uc870\uac74\uc5d0 \ub9de\ub294 \uae30\uc0ac\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.");return;}
+    if (!items.length){showEmpty("조건에 맞는 기사가 없습니다.");return;}
     wrap.innerHTML="";
     items.forEach(function(art){
       var bodyText=(art.body||"").trim()||stripHtml(art.summary||"").trim();
-      if (!bodyText) bodyText="(\uae30\uc0ac \ubcf8\ubb38 \uc694\uc57d \uc5c6\uc74c)";
-      var catColorCls=art.category==="\uc2e0\uc791 \uc18c\uc2dd"?"art-new":art.category==="\uac8c\uc784 \uc18c\uc2dd"?"art-game":art.category==="\uac8c\uc784 \ud68c\uc0ac \ub3d9\ud5a5"?"art-co":"art-gen";
+      if (!bodyText) bodyText="(기사 본문 요약 없음)";
+      var catColorCls=art.category==="신작 소식"?"art-new":art.category==="게임 소식"?"art-game":art.category==="게임 회사 동향"?"art-co":"art-gen";
       var item=document.createElement("div"); item.className="article-item "+catColorCls;
       item.innerHTML=
         '<div class="article-row">'+
@@ -618,7 +618,7 @@
           '<div class="art-title">'+esc(art.title)+'</div>'+
           '<div class="art-actions">'+
             viewBadge(art.views)+
-            ' <a class="btn-url" href="'+esc(art.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">\uae30\uc0ac \uc6d0\ubb38\ubcf4\uae30</a>'+
+            ' <a class="btn-url" href="'+esc(art.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">기사 원문보기</a>'+
             ' <span class="art-expand-icon">&#9660;</span>'+
           '</div>'+
         '</div>'+
@@ -642,16 +642,16 @@
     var grid=document.getElementById("calGrid"), titleEl=document.getElementById("calTitle");
     var detail=document.getElementById("calDetail");
     detail.style.display="none"; grid.innerHTML="";
-    var MONTHS=["\uc77c\uc6d4","\uc774\uc6d4","\uc0bc\uc6d4","\uc0ac\uc6d4","\uc624\uc6d4","\uc720\uc6d4","\uce60\uc6d4","\ud314\uc6d4","\uad6c\uc6d4","\uc2ed\uc6d4","\uc2ed\uc77c\uc6d4","\uc2ed\uc774\uc6d4"];
-    titleEl.textContent=calYear+"\ub144 "+MONTHS[calMonth];
+    var MONTHS=["일월","이월","삼월","사월","오월","유월","칠월","팔월","구월","십월","십일월","십이월"];
+    titleEl.textContent=calYear+"년 "+MONTHS[calMonth];
 
-    var WDAYS=["\uc77c","\uc6d4","\ud654","\uc218","\ubaa9","\uae08","\ud1a0"];
+    var WDAYS=["일","월","화","수","목","금","토"];
     WDAYS.forEach(function(d){var el=document.createElement("div");el.className="cal-weekday";el.textContent=d;grid.appendChild(el);});
 
     // Build date → articles map (신작 only, keyed by _fileDate)
     var newsMap={};
     DATA.forEach(function(art){
-      if (art.category!=="\uc2e0\uc791 \uc18c\uc2dd") return;
+      if (art.category!=="신작 소식") return;
       var dateStr=art._fileDate||"";
       if (!dateStr) return;
       if (!newsMap[dateStr]) newsMap[dateStr]=[];
@@ -684,7 +684,7 @@
           ev.title=art.title;
           cell.appendChild(ev); shown++;
         });
-        if(arts.length>3){var more=document.createElement("div");more.className="cal-more";more.textContent="+"+(arts.length-3)+"\uac74 \ub354";cell.appendChild(more);}
+        if(arts.length>3){var more=document.createElement("div");more.className="cal-more";more.textContent="+"+(arts.length-3)+"건 더";cell.appendChild(more);}
         (function(dsCopy,artsCopy){cell.addEventListener("click",function(){showCalDetail(dsCopy,artsCopy);});})(ds,arts);
       }
       grid.appendChild(cell);
@@ -693,16 +693,16 @@
 
   function showCalDetail(dateStr,arts){
     var detail=document.getElementById("calDetail");
-    var MONTHS=["\uc77c\uc6d4","\uc774\uc6d4","\uc0bc\uc6d4","\uc0ac\uc6d4","\uc624\uc6d4","\uc720\uc6d4","\uce60\uc6d4","\ud314\uc6d4","\uad6c\uc6d4","\uc2ed\uc6d4","\uc2ed\uc77c\uc6d4","\uc2ed\uc774\uc6d4"];
+    var MONTHS=["일월","이월","삼월","사월","오월","유월","칠월","팔월","구월","십월","십일월","십이월"];
     var dt=parseKST(dateStr);
-    var label=dt.getFullYear()+"\ub144 "+MONTHS[dt.getMonth()]+" "+dt.getDate()+"\uc77c \uc2e0\uc791 \uc18c\uc2dd";
-    var html='<div class="cal-detail"><div class="cal-detail-header">&#128197; '+esc(label)+' ('+arts.length+'\uac74)</div>';
+    var label=dt.getFullYear()+"년 "+MONTHS[dt.getMonth()]+" "+dt.getDate()+"일 신작 소식";
+    var html='<div class="cal-detail"><div class="cal-detail-header">&#128197; '+esc(label)+' ('+arts.length+'건)</div>';
     arts.forEach(function(art){
       var etype=getEventType(art.title);
       html+='<div class="cal-detail-item">'+
         '<span class="cal-evt-tag '+TAG_CLS[etype]+'">'+EVT_LABELS[etype]+'</span>'+
         '<div class="cal-detail-title">'+esc(art.title)+'</div>'+
-        '<a class="cal-detail-link" href="'+esc(art.url)+'" target="_blank" rel="noopener">\uc6d0\ubb38\ubcf4\uae30</a>'+
+        '<a class="cal-detail-link" href="'+esc(art.url)+'" target="_blank" rel="noopener">원문보기</a>'+
         '</div>';
     });
     html+='</div>';
@@ -738,8 +738,8 @@
   document.getElementById("btnLoad").addEventListener("click",function(){
     var from=document.getElementById("dateFrom").value, to=document.getElementById("dateTo").value;
     var errEl=document.getElementById("dateErr");
-    if(!from||!to){errEl.textContent="\ub0a0\uc9dc\ub97c \uc120\ud0dd\ud574 \uc8fc\uc138\uc694.";errEl.style.display="";return;}
-    if(daysBetween(parseKST(from),parseKST(to))>30){errEl.textContent="\ucd5c\ub300 30\uc77c\uae4c\uc9c0 \uc870\ud68c \uac00\ub2a5\ud569\ub2c8\ub2e4.";errEl.style.display="";return;}
+    if(!from||!to){errEl.textContent="날짜를 선택해 주세요.";errEl.style.display="";return;}
+    if(daysBetween(parseKST(from),parseKST(to))>30){errEl.textContent="최대 30일까지 조회 가능합니다.";errEl.style.display="";return;}
     errEl.style.display="none";
     document.querySelectorAll(".q-btn").forEach(function(b){b.classList.remove("active");});
     loadRange(from,to);
@@ -762,32 +762,4 @@
 }());
 </script>
 </body>
-</html>"""
-
-
-
-def _make_articles_data() -> list:
-    """ARTICLES 전역 리스트를 JSON 직렬화용 딕셔너리 리스트로 변환"""
-    result = []
-    for art in ARTICLES:
-        result.append({
-            "site":            art.get("site", ""),
-            "title":           art.get("title", ""),
-            "url":             art.get("url", ""),
-            "summary":         art.get("summary", ""),
-            "body":            art.get("body_text", ""),
-            "category":        art.get("cat_html", "일반"),
-            "is_domestic":     art.get("is_domestic", True),
-            "is_ruliweb_best": art.get("is_ruliweb_best", False),
-            "views":           art.get("views", 0),
-            "comments":        art.get("comments", 0),
-            "collected_at":    art.get("collected_at", ""),
-            "score":           art.get("_score", 0),
-            "site_cnt":        art.get("_site_cnt", 1),
-            "content_score":   art.get("_content_score", 1),
-        })
-    return result
-
-
-def build_html() -> str:
-    """index.html 동적 셸 반환 (데이터는 data/*.json 에서 동적 로드)
+</html>
