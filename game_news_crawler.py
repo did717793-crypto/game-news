@@ -517,11 +517,19 @@ def run_all():
         "노트북", "데스크탑", "주변기기", "pc 부품", "하드웨어",
         "게이밍 체어", "게이밍 의자",
     ]
+    # Tier PROMO (+2): 할인/무료 프로모션 — S+ 키워드와 겹쳐도 강제 하향
+    PM_TIER_PROMO = [
+        "무료 체험", "무료 플레이", "무료 배포", "무료로 즐길", "무료 증정",
+        "할인 프로모션", "할인 이벤트", "할인 판매", "특별 할인",
+        "무료 증정", "공짜로", "번들 증정",
+    ]
 
     for art in ARTICLES:
         t = art.get("title", "").lower()
         if any(kw in t for kw in PM_TIER_E):
             cs = 0
+        elif any(kw in t for kw in PM_TIER_PROMO):
+            cs = 2          # 프로모션은 S+ 발동 전에 잡아서 Tier D 수준으로 고정
         elif any(kw in t for kw in PM_TIER_SP):
             cs = 12
         elif any(kw in t for kw in PM_TIER_S):
@@ -1136,6 +1144,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     tmp.innerHTML = html;
     return (tmp.textContent || tmp.innerText || "").trim();
   }
+  function fmtBody(txt) {
+    if (!txt) return txt;
+    // 마침표 뒤 공백을 줄바꿈으로 변환 → 가독성 향상
+    return txt.replace(/\.\s+/g, ".\n").replace(/\?\s+/g, "?\n").replace(/!\s+/g, "!\n");
+  }
 
   var CAT_CLS = {"\uc2e0\uc791 \uc18c\uc2dd":"bcat-new","\uac8c\uc784 \uc18c\uc2dd":"bcat-game","\uac8c\uc784 \ud68c\uc0ac \ub3d9\ud5a5":"bcat-co","\uc77c\ubc18":"bcat-gen"};
   function catBadge(c) { return '<span class="badge '+(CAT_CLS[c]||"bcat-gen")+'">'+esc(c)+'</span>'; }
@@ -1220,7 +1233,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!HERO.length) return;
     HERO.forEach(function(art,i){
       var rc=i===0?"rank-gold":i===1?"rank-silver":i===2?"rank-bronze":"";
-      var bodyText=(art.body||"").trim()||stripHtml(art.summary||"").trim();
+      var bodyText=fmtBody((art.body||"").trim()||stripHtml(art.summary||"").trim());
       var hasBody=bodyText.length>0;
       var card=document.createElement("div"); card.className="hero-card";
       card.innerHTML=
@@ -1286,7 +1299,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!items.length){showEmpty("\uc870\uac74\uc5d0 \ub9de\ub294 \uae30\uc0ac\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.");return;}
     wrap.innerHTML="";
     items.forEach(function(art){
-      var bodyText=(art.body||"").trim()||stripHtml(art.summary||"").trim();
+      var bodyText=fmtBody((art.body||"").trim()||stripHtml(art.summary||"").trim());
       if (!bodyText) bodyText="(\uae30\uc0ac \ubcf8\ubb38 \uc694\uc57d \uc5c6\uc74c)";
       var catColorCls=art.category==="\uc2e0\uc791 \uc18c\uc2dd"?"art-new":art.category==="\uac8c\uc784 \uc18c\uc2dd"?"art-game":art.category==="\uac8c\uc784 \ud68c\uc0ac \ub3d9\ud5a5"?"art-co":"art-gen";
       var item=document.createElement("div"); item.className="article-item "+catColorCls;
