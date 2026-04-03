@@ -471,48 +471,121 @@ def run_all():
         or any(kw in a.get("title", "").lower() for kw in GAME_FILTER_KW)
     ]
 
-    # ── 중요도 1순위: 크로스사이트 커버리지 (동일 기사 다룬 사이트 수) ────────
-    def _get_kw(title: str) -> set:
-        return set(re.findall(r"[가-힣a-zA-Z0-9]{2,}", title.lower()))
-
-    kw_list = [_get_kw(a.get("title", "")) for a in ARTICLES]
-    for i, art in enumerate(ARTICLES):
-        if not kw_list[i]:
-            art["_site_cnt"] = 1
-            continue
-        sites = {art.get("site", "")}
-        for j, other in enumerate(ARTICLES):
-            if i == j:
-                continue
-            overlap = kw_list[i] & kw_list[j]
-            if len(overlap) >= 3:           # 핵심 키워드 3개 이상 겹치면 동일 기사
-                sites.add(other.get("site", ""))
-        art["_site_cnt"] = len(sites)
-
-    # ── 중요도 2순위: 내용 중요도 ───────────────────────────────────────────
-    NEW_GAME_KW  = ["사전예약", "사전 등록", "오픈일", "그랜드 오픈", "신규 서버",
-                    "출시", "런칭", "오픈 확정", "서비스 시작", "cbt", "obt",
-                    "정식 서비스", "정식출시", "얼리 액세스"]
-    COMPANY_KW   = ["대규모 채용", "채용", "해고", "사직", "투자", "인수", "손익",
-                    "적자", "흑자", "구조조정", "합병", "파산", "상장", "인력 감축",
-                    "감원", "희망퇴직"]
+    # ── 사업 PM 관점 콘텐츠 중요도 스코어링 ────────────────────────────────
+    # Tier S+ (+12): 신작 발표·사전예약·서비스 오픈 — 경쟁사 게임 라이프사이클 핵심
+    PM_TIER_SP = [
+        "사전예약", "사전 등록", "사전예약 시작", "사전예약 오픈",
+        "cbt", "obt", "얼리 액세스", "얼리엑세스",
+        "그랜드 오픈", "신규 서버", "서비스 시작", "정식 출시", "정식출시",
+        "정식 서비스", "오픈일 확정", "출시일 확정", "최초 공개", "신작 공개",
+        "첫 공개", "월드 프리미어",
+    ]
+    # Tier S (+10): 업계 구조 변화 — 반드시 알아야 할 비즈니스 이벤트
+    PM_TIER_S = [
+        "인수", "합병", "매각", "파산", "폐업", "청산",
+        "해고", "감원", "구조조정", "희망퇴직", "인력 감축", "정리해고",
+        "대규모 해고", "직원 해고", "직원 감축",
+        "상장", "ipo", "코스닥 상장", "코스피 상장",
+        "서비스 종료", "서버 종료", "서비스종료", "게임 종료",
+    ]
+    # Tier A (+8): 재무·경영 이벤트
+    PM_TIER_A = [
+        "투자 유치", "투자", "시리즈 a", "시리즈 b", "시리즈 c",
+        "영업이익", "영업손실", "영업 이익", "영업 손실",
+        "매출", "적자", "흑자", "손익", "영업실적", "실적 발표",
+        "대표이사 교체", "ceo 교체", "신규 대표", "대표 취임", "대표 사임",
+    ]
+    # Tier B (+6): 게임 업계 흐름·기술 트렌드
+    PM_TIER_B = [
+        "ai", "인공지능", "언리얼", "유니티", "클라우드 게임",
+        "게임 시장", "모바일 시장", "글로벌 진출", "해외 진출",
+        "규제", "심의", "게임 법", "확률형 아이템",
+        "e스포츠", "리그", "대회", "월드챔피언십",
+    ]
+    # Tier C (+4): 출시·런칭 (일반)
+    PM_TIER_C = [
+        "출시", "런칭", "오픈", "공개", "발표",
+    ]
+    # Tier D (+2): 일반 게임 소식
+    PM_TIER_D = [
+        "업데이트", "패치", "신규 콘텐츠", "이벤트", "시즌",
+    ]
+    # Tier E (0): 게임 외적 상품 — site_cnt만 반영
+    PM_TIER_E = [
+        "피규어", "굿즈", "인형", "쿠션", "키링", "포스터", "아크릴",
+        "마우스", "키보드", "헤드셋", "모니터", "메모리", "ram", "그래픽카드",
+        "노트북", "데스크탑", "주변기기", "pc 부품", "하드웨어",
+        "게이밍 체어", "게이밍 의자",
+    ]
 
     for art in ARTICLES:
-        title_lower = art.get("title", "").lower()
-        content_score = 1
-        for kw in NEW_GAME_KW:
-            if kw in title_lower:
-                content_score = 5
-                break
-        if content_score == 1:
-            for kw in COMPANY_KW:
-                if kw in title_lower:
-                    content_score = 4
-                    break
-        art["_content_score"] = content_score
-        art["_score"] = art["_site_cnt"] + content_score
+        t = art.get("title", "").lower()
+        if any(kw in t for kw in PM_TIER_E):
+            cs = 0
+        elif any(kw in t for kw in PM_TIER_SP):
+            cs = 12
+        elif any(kw in t for kw in PM_TIER_S):
+            cs = 10
+        elif any(kw in t for kw in PM_TIER_A):
+            cs = 8
+        elif any(kw in t for kw in PM_TIER_B):
+            cs = 6
+        elif any(kw in t for kw in PM_TIER_C):
+            cs = 4
+        elif any(kw in t for kw in PM_TIER_D):
+            cs = 2
+        else:
+            cs = 1
+        art["_content_score"] = cs
 
-    print(f"\n  총 {len(ARTICLES)}개 기사 수집 완료")
+    # ── 중복 기사 클러스터링 & 대표 1건 선택 ─────────────────────────────────
+    # 3자 이상 고유 키워드 2개 이상 겹치면 동일 기사로 판단
+    _STOP = {
+        "게임", "이번", "이후", "공개", "발표", "서비스", "업데이트",
+        "이상", "국내", "지난", "최근", "현재", "시작", "진행", "관련",
+        "뉴스", "기사", "한국", "새로운", "출시", "오픈",
+    }
+
+    def _dedup_kw(title: str) -> set:
+        raw = set(re.findall(r"[가-힣a-zA-Z0-9]{2,}", title.lower()))
+        return {w for w in raw if len(w) >= 3 and w not in _STOP}
+
+    kw_list = [_dedup_kw(a.get("title", "")) for a in ARTICLES]
+    visited = [False] * len(ARTICLES)
+    clusters = []
+    for i in range(len(ARTICLES)):
+        if visited[i]:
+            continue
+        cluster = [i]
+        visited[i] = True
+        for j in range(i + 1, len(ARTICLES)):
+            if visited[j]:
+                continue
+            if len(kw_list[i] & kw_list[j]) >= 2:   # 고유 키워드 2개 이상 일치
+                cluster.append(j)
+                visited[j] = True
+        clusters.append(cluster)
+
+    kept = []
+    for cluster in clusters:
+        # 클러스터에서 content_score 가장 높은 기사를 대표로 선택
+        # (같으면 수집 사이트 다양성 기준으로 우선)
+        best = max(cluster, key=lambda i: (
+            ARTICLES[i]["_content_score"],
+            len(ARTICLES[i].get("site", "")),
+        ))
+        rep = ARTICLES[best]
+        # 클러스터 사이트 목록 (대표 기사 + 중복들)
+        covered = list({ARTICLES[idx].get("site", "") for idx in cluster
+                        if ARTICLES[idx].get("site")})
+        rep["_site_cnt"]      = len(covered)
+        rep["_covered_sites"] = covered
+        rep["_score"]         = rep["_site_cnt"] + rep["_content_score"]
+        kept.append(rep)
+
+    ARTICLES[:] = kept
+
+    print(f"\n  중복 제거 후: {len(ARTICLES)}건 (원본 클러스터 {len(clusters)}개)")
     by_cat = {}
     for art in ARTICLES:
         c = art["cat_html"]
@@ -833,6 +906,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       max-height: 320px; border-top-width: 1px; padding: 14px 18px;
     }
     .art-site { font-size: 11px; color: #a29bfe; margin-bottom: 6px; }
+    .multi-site-badge {
+      display: inline-block; background: #fff3cd; color: #856404;
+      border: 1px solid #ffc107; border-radius: 4px;
+      padding: 1px 7px; font-size: 10px; font-weight: 700;
+      vertical-align: middle; margin-left: 4px;
+    }
     .art-body-text { white-space: pre-wrap; word-break: break-word; }
 
     /* === Calendar Page === */
@@ -1064,6 +1143,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function siteBadge(s) { return '<span class="badge bsite">'+esc(s)+'</span>'; }
   function viewBadge(v) { return v?'<span class="badge bview">&#128065; '+v.toLocaleString()+'</span>':""; }
   function hotBadge(h) { return h?'<span class="badge bhot">&#128293;HOT</span>':""; }
+  function multiSiteBadge(cnt,sites){
+    if(!cnt||cnt<=1) return "";
+    var tip=sites&&sites.length?sites.join(", "):"";
+    return '<span class="multi-site-badge" title="'+esc(tip)+'">&#128240; '+cnt+'\uac1c \uc0ac\uc774\ud2b8</span>';
+  }
 
   function getEventType(title) {
     var t = (title||"").toLowerCase();
@@ -1142,7 +1226,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       card.innerHTML=
         '<div class="hero-rank '+rc+'">'+(i+1)+'</div>'+
         '<div class="hero-title">'+esc(art.title)+'</div>'+
-        '<div class="hero-meta">'+catBadge(art.category)+" "+srcBadge(art.is_domestic)+" "+siteBadge(art.site)+" "+viewBadge(art.views)+" "+hotBadge(art.is_ruliweb_best)+'</div>'+
+        '<div class="hero-meta">'+catBadge(art.category)+" "+srcBadge(art.is_domestic)+" "+siteBadge(art.site)+" "+viewBadge(art.views)+" "+hotBadge(art.is_ruliweb_best)+" "+multiSiteBadge(art.site_cnt,art.covered_sites)+'</div>'+
         (hasBody?'<button class="hero-expand-btn">&#9660; \ubcf8\ubb38 \uc694\uc57d \ubcf4\uae30</button>'+
           '<div class="hero-body-wrap"><div class="hero-body-text">'+esc(bodyText)+'</div></div>':'')+
         '<a class="hero-link" href="'+esc(art.url)+'" target="_blank" rel="noopener">\uae30\uc0ac \uc6d0\ubb38\ubcf4\uae30 &#8594;</a>';
@@ -1208,7 +1292,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       var item=document.createElement("div"); item.className="article-item "+catColorCls;
       item.innerHTML=
         '<div class="article-row">'+
-          '<div class="art-badges">'+catBadge(art.category)+" "+srcBadge(art.is_domestic)+" "+siteBadge(art.site)+" "+hotBadge(art.is_ruliweb_best)+'</div>'+
+          '<div class="art-badges">'+catBadge(art.category)+" "+srcBadge(art.is_domestic)+" "+siteBadge(art.site)+" "+hotBadge(art.is_ruliweb_best)+" "+multiSiteBadge(art.site_cnt,art.covered_sites)+'</div>'+
           '<div class="art-title">'+esc(art.title)+'</div>'+
           '<div class="art-actions">'+
             viewBadge(art.views)+
@@ -1379,6 +1463,7 @@ def _make_articles_data() -> list:
             "score":           art.get("_score", 0),
             "site_cnt":        art.get("_site_cnt", 1),
             "content_score":   art.get("_content_score", 1),
+            "covered_sites":   art.get("_covered_sites", []),
         })
     return result
 
@@ -1435,51 +1520,67 @@ def update_dates_json(max_days: int = 30):
     print(f"  dates.json 업데이트: {len(dates)}개 날짜")
 
 
-def fetch_article_body(url: str, timeout: int = 6) -> str:
-    """기사 원문 URL에서 본문 텍스트 추출 (최대 600자)"""
+def fetch_article_body(url: str, timeout: int = 10) -> str:
+    """기사 원문 URL에서 본문 텍스트 추출 (최대 1200자)"""
     try:
         r = requests.get(url, headers=HEADERS, timeout=timeout, allow_redirects=True)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "lxml")
-        for tag in soup(["script", "style", "nav", "header", "footer", "aside"]):
+        for tag in soup(["script", "style", "nav", "header", "footer", "aside",
+                          "figure", "figcaption", ".copyright", ".ad", ".banner"]):
             tag.decompose()
-        # 사이트별 본문 셀렉터 우선 시도
-        for sel in [
+        # 한국 게임 언론사 전용 셀렉터 (우선순위 순)
+        SITE_SELECTORS = [
+            # 게임조선
+            ".article_body", ".articleView", ".view_content",
+            # 디스이즈게임
+            ".news-content", ".view_article", ".article-text",
+            # 게임메카
+            ".view_text", ".article-body-content",
+            # 인벤
+            ".news_content", ".view-content",
+            # 게임포커스
+            ".article_view", ".news_view", ".news-view",
+            # 루리웹
+            ".view_content", ".board_main_content",
+            # 네이버 뉴스
+            ".newsct_article", "#articleBodyContents", ".article-body",
+            # 공통
             "article", ".article-body", ".article_body", "#articleBody",
-            "#articleBodyContents", ".news_end", ".view-content",
-            ".article-content", ".post-content", ".entry-content", "main"
-        ]:
+            ".post-content", ".entry-content", ".content-body",
+            "[itemprop='articleBody']", ".story-body",
+        ]
+        for sel in SITE_SELECTORS:
             el = soup.select_one(sel)
             if el:
                 text = clean(el.get_text(separator=" "))
                 if len(text) > 80:
-                    return text[:600]
-        # 폴백: <p> 태그 모음
-        paras = [clean(p.get_text()) for p in soup.select("p") if len(p.get_text().strip()) > 40]
+                    return text[:1200]
+        # 폴백: 충분히 긴 <p> 태그 모음
+        paras = [clean(p.get_text()) for p in soup.select("p")
+                 if len(p.get_text().strip()) > 40]
         if paras:
-            return " ".join(paras[:4])[:600]
+            return " ".join(paras[:6])[:1200]
         return ""
     except Exception:
         return ""
 
 
 def enrich_articles_body():
-    """수집된 기사 본문을 병렬로 fetch (최대 5 workers, 상위 80건)"""
-    targets = ARTICLES[:80]  # score 정렬 전이므로 앞쪽 80개
-    print(f"  본문 보강 중 ({len(targets)}건, 병렬 5)...")
+    """수집된 기사 본문을 병렬로 fetch (최대 8 workers, 전체 기사)"""
+    targets = [a for a in ARTICLES if not a.get("body_text")]
+    print(f"  본문 보강 중 ({len(targets)}건, 병렬 8)...")
 
     def _fetch(art):
-        if art.get("body_text"):
-            return
         body = fetch_article_body(art["url"])
         if body:
             art["body_text"] = body
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as ex:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
         list(ex.map(_fetch, targets))
 
-    filled = sum(1 for a in targets if a.get("body_text"))
-    print(f"  본문 보강 완료: {filled}/{len(targets)}건")
+    filled = sum(1 for a in ARTICLES if a.get("body_text"))
+    print(f"  본문 보강 완료: {filled}/{len(ARTICLES)}건")
 
 
 def push_github(content_date: datetime):
