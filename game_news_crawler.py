@@ -455,6 +455,9 @@ def run_all():
             art.get("views", 0),
         )
 
+    # ── 해외 기사 제거 (국내 언론사 기사만 대시보드에 표시) ──────────────────
+    ARTICLES[:] = [a for a in ARTICLES if a.get("is_domestic", True)]
+
     # ── 루리웹 BEST 비게임 기사 필터링 ──────────────────────────────────────
     GAME_FILTER_KW = [
         "게임", "모바일", "스팀", "콘솔", "플스", "엑박", "ps5", "ps4", "xbox",
@@ -495,13 +498,16 @@ def run_all():
         "매출", "적자", "흑자", "손익", "영업실적", "실적 발표",
         "대표이사 교체", "ceo 교체", "신규 대표", "대표 취임", "대표 사임",
     ]
-    # Tier B (+6): 게임 업계 흐름·기술 트렌드
+    # Tier B (+6): 게임 업계 흐름·기술 트렌드 (AI는 아래 별도 처리)
     PM_TIER_B = [
-        "ai", "인공지능", "언리얼", "유니티", "클라우드 게임",
+        "언리얼", "유니티", "클라우드 게임",
         "게임 시장", "모바일 시장", "글로벌 진출", "해외 진출",
         "규제", "심의", "게임 법", "확률형 아이템",
         "e스포츠", "리그", "대회", "월드챔피언십",
     ]
+    # AI는 게임 컨텍스트와 함께 있을 때만 Tier B 인정
+    _AI_TERMS   = ["ai", "인공지능", "생성형", "llm", "머신러닝"]
+    _AI_GAME_CTX= ["게임", "개발", "스튜디오", "게임사", "콘텐츠", "npc", "캐릭터"]
     # Tier C (+4): 출시·런칭 (일반)
     PM_TIER_C = [
         "출시", "런칭", "오픈", "공개", "발표",
@@ -536,6 +542,9 @@ def run_all():
             cs = 10
         elif any(kw in t for kw in PM_TIER_A):
             cs = 8
+        elif (any(kw in t for kw in _AI_TERMS)
+              and any(kw in t for kw in _AI_GAME_CTX)):
+            cs = 6          # AI + 게임 컨텍스트 → Tier B
         elif any(kw in t for kw in PM_TIER_B):
             cs = 6
         elif any(kw in t for kw in PM_TIER_C):
@@ -1333,17 +1342,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     var grid=document.getElementById("calGrid"), titleEl=document.getElementById("calTitle");
     var detail=document.getElementById("calDetail");
     detail.style.display="none"; grid.innerHTML="";
-    var MONTHS=["\uc77c\uc6d4","\uc774\uc6d4","\uc0bc\uc6d4","\uc0ac\uc6d4","\uc624\uc6d4","\uc720\uc6d4","\uce60\uc6d4","\ud314\uc6d4","\uad6c\uc6d4","\uc2ed\uc6d4","\uc2ed\uc77c\uc6d4","\uc2ed\uc774\uc6d4"];
+    var MONTHS=["1\uc6d4","2\uc6d4","3\uc6d4","4\uc6d4","5\uc6d4","6\uc6d4","7\uc6d4","8\uc6d4","9\uc6d4","10\uc6d4","11\uc6d4","12\uc6d4"];
     titleEl.textContent=calYear+"\ub144 "+MONTHS[calMonth];
 
     var WDAYS=["\uc77c","\uc6d4","\ud654","\uc218","\ubaa9","\uae08","\ud1a0"];
     WDAYS.forEach(function(d){var el=document.createElement("div");el.className="cal-weekday";el.textContent=d;grid.appendChild(el);});
 
-    // Build date → articles map (신작 only, keyed by _fileDate)
+    // Build date → articles map
+    // event_date(기사 내 이벤트 발생일) 우선, 없으면 신작 기사는 _fileDate 사용
     var newsMap={};
     DATA.forEach(function(art){
-      if (art.category!=="\uc2e0\uc791 \uc18c\uc2dd") return;
-      var dateStr=art._fileDate||"";
+      var dateStr="";
+      if (art.event_date) {
+        dateStr=art.event_date;       // 이벤트 날짜가 있으면 그 날에 표시
+      } else if (art.category==="\uc2e0\uc791 \uc18c\uc2dd") {
+        dateStr=art._fileDate||"";   // 신작 소식은 수집일에 폴백
+      }
       if (!dateStr) return;
       if (!newsMap[dateStr]) newsMap[dateStr]=[];
       newsMap[dateStr].push(art);
@@ -1384,7 +1398,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function showCalDetail(dateStr,arts){
     var detail=document.getElementById("calDetail");
-    var MONTHS=["\uc77c\uc6d4","\uc774\uc6d4","\uc0bc\uc6d4","\uc0ac\uc6d4","\uc624\uc6d4","\uc720\uc6d4","\uce60\uc6d4","\ud314\uc6d4","\uad6c\uc6d4","\uc2ed\uc6d4","\uc2ed\uc77c\uc6d4","\uc2ed\uc774\uc6d4"];
+    var MONTHS=["1\uc6d4","2\uc6d4","3\uc6d4","4\uc6d4","5\uc6d4","6\uc6d4","7\uc6d4","8\uc6d4","9\uc6d4","10\uc6d4","11\uc6d4","12\uc6d4"];
     var dt=parseKST(dateStr);
     var label=dt.getFullYear()+"\ub144 "+MONTHS[dt.getMonth()]+" "+dt.getDate()+"\uc77c \uc2e0\uc791 \uc18c\uc2dd";
     var html='<div class="cal-detail"><div class="cal-detail-header">&#128197; '+esc(label)+' ('+arts.length+'\uac74)</div>';
@@ -1477,6 +1491,7 @@ def _make_articles_data() -> list:
             "site_cnt":        art.get("_site_cnt", 1),
             "content_score":   art.get("_content_score", 1),
             "covered_sites":   art.get("_covered_sites", []),
+            "event_date":      art.get("event_date", ""),
         })
     return result
 
@@ -1533,6 +1548,32 @@ def update_dates_json(max_days: int = 30):
     print(f"  dates.json 업데이트: {len(dates)}개 날짜")
 
 
+def extract_event_date(title: str, body: str, ref_year: int) -> str:
+    """기사 제목/본문에서 이벤트 발생 날짜 추출 (YYYY-MM-DD 반환, 없으면 "")
+    우선순위: 연월일 > 월일 > M/D 슬래시 패턴
+    """
+    text = (title or "") + " " + (body or "")[:400]
+    # 2026년 4월 2일 패턴
+    m = re.search(r"(20\d\d)\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일", text)
+    if m:
+        y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        if 1 <= mo <= 12 and 1 <= d <= 31:
+            return f"{y}-{mo:02d}-{d:02d}"
+    # 4월 2일 패턴 (연도 없음 → ref_year)
+    m = re.search(r"(\d{1,2})\s*월\s*(\d{1,2})\s*일", text)
+    if m:
+        mo, d = int(m.group(1)), int(m.group(2))
+        if 1 <= mo <= 12 and 1 <= d <= 31:
+            return f"{ref_year}-{mo:02d}-{d:02d}"
+    # 4/2 슬래시 패턴
+    m = re.search(r"\b(\d{1,2})/(\d{1,2})\b", text)
+    if m:
+        mo, d = int(m.group(1)), int(m.group(2))
+        if 1 <= mo <= 12 and 1 <= d <= 31:
+            return f"{ref_year}-{mo:02d}-{d:02d}"
+    return ""
+
+
 def fetch_article_body(url: str, timeout: int = 10) -> str:
     """기사 원문 URL에서 본문 텍스트 추출 (최대 1200자)"""
     try:
@@ -1580,7 +1621,7 @@ def fetch_article_body(url: str, timeout: int = 10) -> str:
 
 
 def enrich_articles_body():
-    """수집된 기사 본문을 병렬로 fetch (최대 8 workers, 전체 기사)"""
+    """수집된 기사 본문 fetch + 이벤트 날짜 추출 (병렬 8 workers)"""
     targets = [a for a in ARTICLES if not a.get("body_text")]
     print(f"  본문 보강 중 ({len(targets)}건, 병렬 8)...")
 
@@ -1592,8 +1633,23 @@ def enrich_articles_body():
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
         list(ex.map(_fetch, targets))
 
+    # ── 이벤트 날짜 추출 (신작 관련 + 높은 content_score 기사 우선) ──────────
+    ref_year = datetime.now(KST).year
+    for art in ARTICLES:
+        if art.get("event_date"):        # 이미 있으면 스킵
+            continue
+        if art.get("_content_score", 0) >= 4:   # S+·S·A·B·C 등급만
+            ev = extract_event_date(
+                art.get("title", ""),
+                art.get("body_text", ""),
+                ref_year,
+            )
+            if ev:
+                art["event_date"] = ev
+
     filled = sum(1 for a in ARTICLES if a.get("body_text"))
-    print(f"  본문 보강 완료: {filled}/{len(ARTICLES)}건")
+    ev_cnt = sum(1 for a in ARTICLES if a.get("event_date"))
+    print(f"  본문 보강 완료: {filled}/{len(ARTICLES)}건 / 이벤트 날짜: {ev_cnt}건")
 
 
 def push_github(content_date: datetime):
