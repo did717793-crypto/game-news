@@ -701,6 +701,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       transition: opacity 0.2s;
     }
     .hero-link:hover { opacity: 0.85; }
+    .hero-body-wrap { max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.3s; }
+    .hero-card.open .hero-body-wrap { max-height: 200px; padding: 10px 0 4px; }
+    .hero-body-text { font-size: 12px; color: #555; line-height: 1.65; white-space: pre-wrap; word-break: break-word; border-top: 1px solid #e8e4ff; padding-top: 10px; }
+    .hero-expand-btn {
+      display: block; width: 100%; margin-top: 8px;
+      background: none; border: 1px solid #d0c9ff; border-radius: 6px;
+      color: #9b8fe0; font-size: 11px; font-weight: 600; padding: 5px 0;
+      cursor: pointer; text-align: center; transition: all 0.2s;
+    }
+    .hero-expand-btn:hover { background: #f0edff; border-color: #a29bfe; color: #6c5ce7; }
+    .hero-card.open .hero-expand-btn { background: #f0edff; color: #6c5ce7; border-color: #a29bfe; }
     .car-dots { display: flex; justify-content: center; gap: 8px; margin-top: 16px; }
     .car-dot {
       width: 8px; height: 8px; border-radius: 50%;
@@ -1082,12 +1093,26 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!HERO.length) return;
     HERO.forEach(function(art,i){
       var rc=i===0?"rank-gold":i===1?"rank-silver":i===2?"rank-bronze":"";
+      var bodyText=(art.body||"").trim()||stripHtml(art.summary||"").trim();
+      var hasBody=bodyText.length>0;
       var card=document.createElement("div"); card.className="hero-card";
       card.innerHTML=
         '<div class="hero-rank '+rc+'">'+(i+1)+'</div>'+
         '<div class="hero-title">'+esc(art.title)+'</div>'+
         '<div class="hero-meta">'+catBadge(art.category)+" "+srcBadge(art.is_domestic)+" "+siteBadge(art.site)+" "+viewBadge(art.views)+" "+hotBadge(art.is_ruliweb_best)+'</div>'+
+        (hasBody?'<button class="hero-expand-btn">&#9660; \ubcf8\ubb38 \uc694\uc57d \ubcf4\uae30</button>'+
+          '<div class="hero-body-wrap"><div class="hero-body-text">'+esc(bodyText)+'</div></div>':'')+
         '<a class="hero-link" href="'+esc(art.url)+'" target="_blank" rel="noopener">\uae30\uc0ac \uc6d0\ubb38\ubcf4\uae30 &#8594;</a>';
+      var btn=card.querySelector(".hero-expand-btn");
+      if(btn){
+        btn.addEventListener("click",function(e){
+          e.stopPropagation();
+          card.classList.toggle("open");
+          btn.textContent=card.classList.contains("open")
+            ?"\u25b2 \uc811\uae30"
+            :"\u25bc \ubcf8\ubb38 \uc694\uc57d \ubcf4\uae30";
+        });
+      }
       track.appendChild(card);
     });
     var maxIdx=Math.max(0,HERO.length-CAR_VISIBLE);
