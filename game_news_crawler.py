@@ -1603,12 +1603,55 @@ def extract_event_date(title: str, body: str, ref_year: int) -> str:
     return ""
 
 
-def fetch_article_body(url: str, timeout: int = 10) -> str:
-    """기사 원문 URL에서 본문 텍스트 추출 (최대 1200자)"""
+def extract_date_from_soup(soup) -> "datetime | None":
+    """기사 페이지 HTML에서 발행일 추출 (meta → time → 텍스트 순)"""
+    # 1. meta 태그 (가장 신뢰도 높음)
+    for attrs in [
+        {"property": "article:published_time"},
+        {"name": "pubdate"},
+        {"name": "article:published"},
+        {"property": "og:updated_time"},
+        {"name": "Date"},
+    ]:
+        tag = soup.find("meta", attrs=attrs)
+        if tag and tag.get("content"):
+            try:
+                s = tag["content"].strip()
+                dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+                return dt.astimezone(KST)
+            except Exception:
+                pass
+    # 2. <time datetime="...">
+    tag = soup.find("time", attrs={"datetime": True})
+    if tag:
+        try:
+            s = tag["datetime"].strip()
+            dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+            return dt.astimezone(KST)
+        except Exception:
+            pass
+    # 3. 페이지 상단 텍스트에서 날짜 패턴 (YYYY-MM-DD / YYYY.MM.DD)
+    text = soup.get_text()[:4000]
+    m = re.search(r"(20\d{2})[.\-](0?[1-9]|1[0-2])[.\-](0?[1-9]|[12]\d|3[01])", text)
+    if m:
+        try:
+            y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+            return datetime(y, mo, d, 12, 0, tzinfo=KST)
+        except Exception:
+            pass
+    return None
+
+
+def fetch_article_body(url: str, timeout: int = 10):
+    """기사 원문 URL에서 (본문 텍스트, 발행일) 반환"""
     try:
         r = requests.get(url, headers=HEADERS, timeout=timeout, allow_redirects=True)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "lxml")
+
+        # 발행일 먼저 추출 (태그 제거 전)
+        pub_dt = extract_date_from_soup(soup)
+
         for tag in soup(["script", "style", "nav", "header", "footer", "aside",
                           "figure", "figcaption", ".copyright", ".ad", ".banner"]):
             tag.decompose()
@@ -1638,29 +1681,45 @@ def fetch_article_body(url: str, timeout: int = 10) -> str:
             if el:
                 text = clean(el.get_text(separator=" "))
                 if len(text) > 80:
-                    return text[:1200]
+                    return text[:1200], pub_dt
         # 폴백: 충분히 긴 <p> 태그 모음
         paras = [clean(p.get_text()) for p in soup.select("p")
                  if len(p.get_text().strip()) > 40]
         if paras:
-            return " ".join(paras[:6])[:1200]
-        return ""
+            return " ".join(paras[:6])[:1200], pub_dt
+        return "", pub_dt
     except Exception:
-        return ""
+        return "", None
 
 
-def enrich_articles_body():
-    """수집된 기사 본문 fetch + 이벤트 날짜 추출 (병렬 8 workers)"""
+def enrich_articles_body(win_start=None, win_end=None):
+    """수집된 기사 본문 fetch + 발행일 추출 + 날짜 재필터 (병렬 8 workers)"""
     targets = [a for a in ARTICLES if not a.get("body_text")]
     print(f"  본문 보강 중 ({len(targets)}건, 병렬 8)...")
 
     def _fetch(art):
-        body = fetch_article_body(art["url"])
+        body, pub_dt = fetch_article_body(art["url"])
         if body:
             art["body_text"] = body
+        # pub_date 없는 기사(HTML 스크래핑)에 날짜 채우기
+        if not art.get("pub_date") and pub_dt:
+            art["_pub_datetime"] = pub_dt
+            art["pub_date"] = pub_dt.strftime("%Y-%m-%d %H:%M")
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
         list(ex.map(_fetch, targets))
+
+    # 날짜 재필터: 본문 fetch 후 날짜 확인된 기사 중 범위 벗어난 것 제거
+    if win_start and win_end:
+        before = len(ARTICLES)
+        ARTICLES[:] = [
+            a for a in ARTICLES
+            if a.get("_pub_datetime") is None
+            or (win_start <= a["_pub_datetime"] <= win_end)
+        ]
+        removed = before - len(ARTICLES)
+        if removed:
+            print(f"  날짜 재필터: {removed}건 제거 (범위 외)")
 
     # ── 이벤트 날짜 추출 (신작 관련 + 높은 content_score 기사 우선) ──────────
     ref_year = datetime.now(KST).year
@@ -1715,7 +1774,7 @@ def main():
 
     # 1-1. 본문 보강 (병렬 fetch)
     print("\n[1-1] 기사 본문 보강")
-    enrich_articles_body()
+    enrich_articles_body(win_start, win_end)
 
     # 2. XLSX 저장 (전일 날짜 기준)
     print("\n[2/4] XLSX 저장")

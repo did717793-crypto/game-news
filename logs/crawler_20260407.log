@@ -217,3 +217,47 @@ C:\Users\Admin\Documents\game-news\game_news_crawler.py:1159: SyntaxWarning: "\s
 === 완료: 90건 처리 ===
 [2026-04-07 12:11:23.11] END 
 [2026-04-07 12:19:58.89] START 
+C:\Users\Admin\Documents\game-news\game_news_crawler.py:1184: SyntaxWarning: "\s" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\s"? A raw string is also an option.
+  return txt.replace(/[.]\s+/g, ".\\n").replace(/[?]\s+/g, "?\\n").replace(/[!]\s+/g, "!\\n");
+=== 게임 업계 동향 크롤러 v3.0 | 실행: 2026-04-07 12:19 KST ===
+    수집 대상: 2026-04-06 00:00 ~ 2026-04-06 23:59 KST
+
+[1/3] 크롤링 시작
+  ▶ 디스이즈게임
+  ▶ 게임메카
+  ▶ 게임조선
+  ▶ 인벤
+  ▶ 게임포커스
+  ▶ 루리웹 뉴스
+  ▶ 루리웹 베스트
+  ▶ 네이버뉴스 IT/게임
+  ▶ Game Developer
+  ▶ VentureBeat
+  ▶ PocketGamer.biz
+
+  중복 제거 후: 72건 (원본 클러스터 72개)
+  - 일반: 48건
+  - 신작 소식: 12건
+  - 게임 소식: 7건
+  - 게임 회사 동향: 5건
+
+[1-1] 기사 본문 보강
+  본문 보강 중 (72건, 병렬 8)...
+  본문 보강 완료: 66/72건 / 이벤트 날짜: 4건
+
+[2/4] XLSX 저장
+  XLSX 저장: C:\Users\Admin\Desktop\일일 체크리스트\2026.04.06\game_news_20260406.xlsx
+
+[3/4] JSON + HTML 저장
+  JSON 저장: C:\Users\Admin\Documents\game-news\data\2026-04-06.json (72건)
+  dates.json 업데이트: 3개 날짜
+  HTML 저장: C:\Users\Admin\Documents\game-news\index.html
+
+[4/4] GitHub Pages 배포
+  GitHub Pages 배포 완료 ✓
+
+=== 완료: 72건 처리 ===
+[2026-04-07 12:20:16.44] END 
+[2026-04-07 17:23:41.26] START 
+C:\Users\Admin\Documents\game-news\game_news_crawler.py:1184: SyntaxWarning: "\s" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\s"? A raw string is also an option.
+  return txt.replace(/[.]\s+/g, ".\\n").replace(/[?]\s+/g, "?\\n").replace(/[!]\s+/g, "!\\n");
