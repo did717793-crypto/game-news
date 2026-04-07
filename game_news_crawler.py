@@ -608,7 +608,7 @@ def run_all():
         c = art["cat_html"]
         by_cat[c] = by_cat.get(c, 0) + 1
     for k, v in by_cat.items():
-        print(f"  • {k}: {v}건")
+        print(f"  - {k}: {v}건")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -1156,7 +1156,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function fmtBody(txt) {
     if (!txt) return txt;
     // 마침표 뒤 공백을 줄바꿈으로 변환 → 가독성 향상
-    return txt.replace(/\.\s+/g, ".\\n").replace(/\?\s+/g, "?\\n").replace(/!\s+/g, "!\\n");
+    return txt.replace(/[.]\s+/g, ".\\n").replace(/[?]\s+/g, "?\\n").replace(/[!]\s+/g, "!\\n");
   }
 
   var CAT_CLS = {"\uc2e0\uc791 \uc18c\uc2dd":"bcat-new","\uac8c\uc784 \uc18c\uc2dd":"bcat-game","\uac8c\uc784 \ud68c\uc0ac \ub3d9\ud5a5":"bcat-co","\uc77c\ubc18":"bcat-gen"};
