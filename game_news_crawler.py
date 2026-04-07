@@ -83,6 +83,18 @@ def get_folder_name(content_date: datetime) -> str:
     return content_date.strftime("%Y.%m.%d")
 
 
+def parse_pub_dt(pub_dt_str) -> "datetime | None":
+    """RSS published 문자열 -> KST datetime 변환"""
+    if not pub_dt_str:
+        return None
+    try:
+        import email.utils
+        dt = email.utils.parsedate_to_datetime(pub_dt_str)
+        return dt.astimezone(KST)
+    except Exception:
+        return None
+
+
 def fetch(url: str, timeout: int = 15):
     try:
         r = requests.get(url, headers=HEADERS, timeout=timeout)
@@ -191,6 +203,11 @@ def add_article(article: dict):
     article.setdefault("pub_dt", None)
     article.setdefault("is_domestic", True)
     article.setdefault("is_ruliweb_best", False)
+
+    # pub_dt 파싱 → pub_date (표시용) + _pub_datetime (날짜 필터용)
+    _pdt = parse_pub_dt(article.get("pub_dt"))
+    article["_pub_datetime"] = _pdt
+    article["pub_date"] = _pdt.strftime("%Y-%m-%d %H:%M") if _pdt else ""
 
     ARTICLES.append(article)
 
@@ -432,7 +449,7 @@ def crawl_pocketgamer():
         add_article({"site": "PocketGamer.biz", "title": title, "url": href, "is_domestic": False})
 
 
-def run_all():
+def run_all(win_start=None, win_end=None):
     print("\n[1/3] 크롤링 시작")
     crawl_thisisgame()
     crawl_gamemeca()
@@ -444,6 +461,14 @@ def run_all():
     crawl_gamedeveloper()
     crawl_venturebeat()
     crawl_pocketgamer()
+
+    # ── 날짜 필터: pub_date 있는 기사는 수집 윈도우 내 것만 유지 ──────────────
+    if win_start and win_end:
+        ARTICLES[:] = [
+            a for a in ARTICLES
+            if a.get("_pub_datetime") is None  # 날짜 모름(HTML 스크래핑) → 포함
+            or (win_start <= a["_pub_datetime"] <= win_end)
+        ]
 
     # 카테고리 분류
     for art in ARTICLES:
@@ -1323,7 +1348,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           '</div>'+
         '</div>'+
         '<div class="art-body">'+
-          '<div class="art-site">'+esc(art.site)+(art.collected_at?' &middot; '+esc(art.collected_at):'')+'</div>'+
+          '<div class="art-site">'+esc(art.site)+(art.pub_date?' &middot; '+esc(art.pub_date):art.collected_at?' &middot; '+esc(art.collected_at):'')+'</div>'+
           '<div class="art-body-text">'+esc(bodyText)+'</div>'+
         '</div>';
       item.querySelector(".article-row").addEventListener("click",function(e){
@@ -1487,6 +1512,7 @@ def _make_articles_data() -> list:
             "views":           art.get("views", 0),
             "comments":        art.get("comments", 0),
             "collected_at":    art.get("collected_at", ""),
+            "pub_date":        art.get("pub_date", ""),
             "score":           art.get("_score", 0),
             "site_cnt":        art.get("_site_cnt", 1),
             "content_score":   art.get("_content_score", 1),
@@ -1681,7 +1707,7 @@ def main():
     print(f"    수집 대상: {win_start.strftime('%Y-%m-%d %H:%M')} ~ {win_end.strftime('%Y-%m-%d %H:%M')} KST")
 
     # 1. 크롤링 + 분류 (주말 포함 매일 실행)
-    run_all()
+    run_all(win_start, win_end)
 
     if not ARTICLES:
         print("[ERROR] 수집된 기사 없음. 종료.")

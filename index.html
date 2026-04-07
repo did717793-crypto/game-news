@@ -639,7 +639,7 @@
           '</div>'+
         '</div>'+
         '<div class="art-body">'+
-          '<div class="art-site">'+esc(art.site)+(art.collected_at?' &middot; '+esc(art.collected_at):'')+'</div>'+
+          '<div class="art-site">'+esc(art.site)+(art.pub_date?' &middot; '+esc(art.pub_date):art.collected_at?' &middot; '+esc(art.collected_at):'')+'</div>'+
           '<div class="art-body-text">'+esc(bodyText)+'</div>'+
         '</div>';
       item.querySelector(".article-row").addEventListener("click",function(e){
