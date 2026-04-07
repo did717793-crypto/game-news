@@ -1541,10 +1541,13 @@ def update_dates_json(max_days: int = 30):
     # 최대 max_days 개만 유지
     dates = existing[:max_days]
 
-    dates_file.write_text(
+    # 임시 파일에 먼저 쓴 뒤 교체 → 중단 시 손상 방지
+    tmp = dates_file.with_suffix(".tmp")
+    tmp.write_text(
         json.dumps({"dates": dates}, ensure_ascii=False, indent=2),
         encoding="utf-8"
     )
+    tmp.replace(dates_file)
     print(f"  dates.json 업데이트: {len(dates)}개 날짜")
 
 
