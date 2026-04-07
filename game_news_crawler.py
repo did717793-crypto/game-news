@@ -39,6 +39,19 @@ HEADERS = {
     "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 }
+# 기사 본문 fetch 전용 헤더 (브라우저 접속처럼 위장)
+ARTICLE_HEADERS = {
+    "User-Agent": USER_AGENT,
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Cache-Control": "max-age=0",
+}
 
 # 저장 경로
 BASE_DIR   = Path(r"C:\Users\Admin\Desktop\일일 체크리스트")
@@ -968,43 +981,66 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       cursor: pointer; transition: all 0.15s;
     }
     .cal-nav-btn:hover { background: #6c5ce7; color: #fff; border-color: #6c5ce7; }
-    .cal-legend { display: flex; gap: 14px; margin-left: auto; flex-wrap: wrap; align-items: center; }
+    .cal-legend { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; align-items: center; }
     .cal-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #636e72; font-weight: 600; }
-    .cal-legend-dot { width: 10px; height: 10px; border-radius: 3px; }
-    .dot-release { background: #e17055; }
-    .dot-presale { background: #0984e3; }
-    .dot-cbt     { background: #00b894; }
-    .dot-server  { background: #a29bfe; }
+    .cal-legend-dot { width: 28px; height: 10px; border-radius: 5px; }
+    .dot-presale   { background: #0984e3; }
+    .dot-cbt       { background: #00b894; }
+    .dot-obt       { background: #00cec9; }
+    .dot-release   { background: #e17055; }
+    .dot-server    { background: #a29bfe; }
+    .dot-early     { background: #fd79a8; }
+    .dot-end       { background: #636e72; }
 
     .cal-body { padding: 20px 28px 40px; }
     .cal-grid {
-      display: grid; grid-template-columns: repeat(7, 1fr);
-      gap: 2px; background: #e8e4ff; border-radius: 12px; overflow: hidden;
+      background: #e8e4ff; border-radius: 12px; overflow: hidden;
+      border: 2px solid #e8e4ff;
+    }
+    .cal-header-row {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
     }
     .cal-weekday {
       background: #6c5ce7; color: #fff; text-align: center;
       padding: 10px 4px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
     }
-    .cal-day {
-      background: #fff; min-height: 90px; padding: 8px 6px;
-      cursor: default; transition: background 0.15s;
+    .cal-week-row {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+      position: relative; background: #e8e4ff; min-height: 80px;
     }
-    .cal-day.has-events { cursor: pointer; }
-    .cal-day.has-events:hover { background: #f0edff; }
+    .cal-day {
+      background: #fff; padding: 6px 5px 4px; overflow: visible;
+    }
     .cal-day.empty { background: #faf9ff; }
     .cal-day.today { background: #f0edff; }
-    .cal-day.today .cal-day-num { color: #6c5ce7; font-weight: 900; background: #6c5ce7; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
-    .cal-day-num { font-size: 12px; font-weight: 700; color: #636e72; margin-bottom: 4px; }
-    .cal-event {
-      font-size: 10px; font-weight: 600; padding: 2px 5px; border-radius: 4px;
-      margin-bottom: 2px; line-height: 1.4;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    .cal-day.today .cal-day-num {
+      color: #fff; font-weight: 900; background: #6c5ce7;
+      border-radius: 50%; width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
     }
-    .event-release { background: #fff0ee; color: #e17055; }
-    .event-presale { background: #e8f4ff; color: #0984e3; }
-    .event-cbt     { background: #e8fff4; color: #00b894; }
-    .event-server  { background: #f0e8ff; color: #6c5ce7; }
-    .cal-more { font-size: 10px; color: #a29bfe; font-weight: 700; }
+    .cal-day-num { font-size: 12px; font-weight: 700; color: #636e72; }
+
+    /* Gantt 띠 */
+    .cal-band {
+      position: absolute; height: 18px; line-height: 18px;
+      font-size: 10px; font-weight: 700; color: #fff;
+      padding: 0 6px; cursor: pointer;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      z-index: 10; transition: opacity 0.15s;
+    }
+    .cal-band:hover { opacity: 0.8; }
+    .cal-band.band-single { border-radius: 9px; }
+    .cal-band.band-start  { border-radius: 9px 0 0 9px; }
+    .cal-band.band-mid    { border-radius: 0; }
+    .cal-band.band-end    { border-radius: 0 9px 9px 0; }
+    .band-presale  { background: #0984e3; }
+    .band-cbt      { background: #00b894; }
+    .band-obt      { background: #00cec9; }
+    .band-release  { background: #e17055; }
+    .band-server   { background: #a29bfe; }
+    .band-end-svc  { background: #636e72; }
+    .band-early    { background: #fd79a8; }
+    .band-default  { background: #6c5ce7; }
 
     .cal-detail {
       margin-top: 20px; background: #fff; border-radius: 12px; border: 2px solid #e8e4ff;
@@ -1134,10 +1170,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="cal-title" id="calTitle"></div>
   <button class="cal-nav-btn" id="calNext">다음달 &#8250;</button>
   <div class="cal-legend">
-    <div class="cal-legend-item"><div class="cal-legend-dot dot-release"></div>출시</div>
     <div class="cal-legend-item"><div class="cal-legend-dot dot-presale"></div>사전예약</div>
     <div class="cal-legend-item"><div class="cal-legend-dot dot-cbt"></div>CBT</div>
-    <div class="cal-legend-item"><div class="cal-legend-dot dot-server"></div>서버오픈</div>
+    <div class="cal-legend-item"><div class="cal-legend-dot dot-obt"></div>OBT</div>
+    <div class="cal-legend-item"><div class="cal-legend-dot dot-release"></div>출시</div>
+    <div class="cal-legend-item"><div class="cal-legend-dot dot-server"></div>신규서버</div>
+    <div class="cal-legend-item"><div class="cal-legend-dot dot-early"></div>얼리액세스</div>
+    <div class="cal-legend-item"><div class="cal-legend-dot dot-end"></div>서비스종료</div>
   </div>
 </div>
 
@@ -1196,16 +1235,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return '<span class="multi-site-badge" title="'+esc(tip)+'">&#128240; '+cnt+'\uac1c \uc0ac\uc774\ud2b8</span>';
   }
 
-  function getEventType(title) {
-    var t = (title||"").toLowerCase();
-    if (t.indexOf("\uc0ac\uc804\uc608\uc57d")!==-1) return "presale";
-    if (t.indexOf("cbt")!==-1||t.indexOf("\ud074\ub85c\uc988\ubca0\ud0c0")!==-1||t.indexOf("\ube44\uacf5\uac1c\ud14c\uc2a4\ud2b8")!==-1) return "cbt";
-    if (t.indexOf("\uc11c\ubc84\uc624\ud508")!==-1||t.indexOf("\uc11c\ubc84 \uc624\ud508")!==-1||t.indexOf("\uc2e0\uaddc \uc11c\ubc84")!==-1||t.indexOf("\uc2e0\uc11c\ubc84")!==-1) return "server";
-    return "release";
-  }
-  var EVT_LABELS = {release:"\ucd9c\uc2dc", presale:"\uc0ac\uc804\uc608\uc57d", cbt:"CBT", server:"\uc11c\ubc84\uc624\ud508"};
-  var EVT_CLS   = {release:"event-release", presale:"event-presale", cbt:"event-cbt", server:"event-server"};
-  var TAG_CLS   = {release:"tag-release",   presale:"tag-presale",   cbt:"tag-cbt",   server:"tag-server"};
+  var BAND_CLS = {
+    "\uc0ac\uc804\uc608\uc57d":"band-presale",
+    "CBT":"band-cbt", "OBT":"band-obt",
+    "\ucd9c\uc2dc":"band-release",
+    "\uc2e0\uaddc\uc11c\ubc84":"band-server",
+    "\uc885\ub8cc":"band-end-svc",
+    "\uc5bc\ub9ac\uc561\uc138\uc2a4":"band-early"
+  };
+  var TAG_CLS = {
+    "\uc0ac\uc804\uc608\uc57d":"tag-presale", "CBT":"tag-cbt", "OBT":"tag-cbt",
+    "\ucd9c\uc2dc":"tag-release", "\uc2e0\uaddc\uc11c\ubc84":"tag-server",
+    "\uc885\ub8cc":"tag-server", "\uc5bc\ub9ac\uc561\uc138\uc2a4":"tag-cbt"
+  };
 
   /* ── Data Loading ── */
   function loadDates() {
@@ -1333,8 +1375,28 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!items.length){showEmpty("\uc870\uac74\uc5d0 \ub9de\ub294 \uae30\uc0ac\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.");return;}
     wrap.innerHTML="";
     items.forEach(function(art){
-      var bodyText=fmtBody((art.body||"").trim()||stripHtml(art.summary||"").trim());
-      if (!bodyText) bodyText="(\uae30\uc0ac \ubcf8\ubb38 \uc694\uc57d \uc5c6\uc74c)";
+      // 본문 우선 → 요약 → 제목+날짜 1줄 요약 자동생성
+      var rawBody=(art.body||"").trim();
+      var rawSummary=stripHtml(art.summary||"").trim();
+      var bodyText="";
+      if(rawBody.length>30){
+        bodyText=fmtBody(rawBody);
+      } else if(rawSummary.length>30){
+        bodyText=rawSummary.substring(0,400);
+      } else {
+        // 본문 없음 → 제목에서 핵심 + 날짜 조합
+        var core=art.title;
+        var ci=art.title.indexOf(",");
+        if(ci>0&&ci<=12) core=art.title.substring(ci+1).trim();
+        var datePart="";
+        if(art.event_start){
+          var ed=new Date(art.event_start+"T00:00:00+09:00");
+          var ds=(ed.getMonth()+1)+"\uc6d4 "+ed.getDate()+"\uc77c";
+          var lbl={"\\uc0ac\\uc804\\uc608\\uc57d":"\\uc0ac\\uc804\\uc608\\uc57d \\uc2dc\\uc791","CBT":"CBT","OBT":"OBT","\\ucd9c\\uc2dc":"\\ucd9c\\uc2dc","\\uc2e0\\uaddc\\uc11c\\ubc84":"\\uc2e0\\uaddc \\uc11c\\ubc84 \\uc624\\ud508","\\uc885\\ub8cc":"\\uc11c\\ube44\\uc2a4 \\uc885\\ub8cc"}[art.event_type]||"\\uc608\\uc815";
+          datePart=" \u2192 "+ds+" "+lbl;
+        }
+        bodyText=core+datePart;
+      }
       var catColorCls=art.category==="\uc2e0\uc791 \uc18c\uc2dd"?"art-new":art.category==="\uac8c\uc784 \uc18c\uc2dd"?"art-game":art.category==="\uac8c\uc784 \ud68c\uc0ac \ub3d9\ud5a5"?"art-co":"art-gen";
       var item=document.createElement("div"); item.className="article-item "+catColorCls;
       item.innerHTML=
@@ -1362,7 +1424,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     document.getElementById("articleWrap").innerHTML='<div class="empty-state"><div class="empty-icon">&#128235;</div><div class="empty-msg">'+msg+'</div></div>';
   }
 
-  /* ── Calendar ── */
+  /* ── Calendar (Gantt 띠 방식) ── */
   function renderCalendar(){
     var grid=document.getElementById("calGrid"), titleEl=document.getElementById("calTitle");
     var detail=document.getElementById("calDetail");
@@ -1370,75 +1432,110 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     var MONTHS=["1\uc6d4","2\uc6d4","3\uc6d4","4\uc6d4","5\uc6d4","6\uc6d4","7\uc6d4","8\uc6d4","9\uc6d4","10\uc6d4","11\uc6d4","12\uc6d4"];
     titleEl.textContent=calYear+"\ub144 "+MONTHS[calMonth];
 
-    var WDAYS=["\uc77c","\uc6d4","\ud654","\uc218","\ubaa9","\uae08","\ud1a0"];
-    WDAYS.forEach(function(d){var el=document.createElement("div");el.className="cal-weekday";el.textContent=d;grid.appendChild(el);});
-
-    // Build date → articles map
-    // event_date(기사 내 이벤트 발생일) 우선, 없으면 신작 기사는 _fileDate 사용
-    var newsMap={};
-    DATA.forEach(function(art){
-      var dateStr="";
-      if (art.event_date) {
-        dateStr=art.event_date;       // 이벤트 날짜가 있으면 그 날에 표시
-      } else if (art.category==="\uc2e0\uc791 \uc18c\uc2dd") {
-        dateStr=art._fileDate||"";   // 신작 소식은 수집일에 폴백
-      }
-      if (!dateStr) return;
-      if (!newsMap[dateStr]) newsMap[dateStr]=[];
-      newsMap[dateStr].push(art);
+    // 요일 헤더
+    var hdr=document.createElement("div"); hdr.className="cal-header-row";
+    ["\uc77c","\uc6d4","\ud654","\uc218","\ubaa9","\uae08","\ud1a0"].forEach(function(d){
+      var e=document.createElement("div"); e.className="cal-weekday"; e.textContent=d; hdr.appendChild(e);
     });
+    grid.appendChild(hdr);
 
-    var today=new Date(), todayStr=fmtDate(today);
+    var today=fmtDate(new Date());
     var firstDay=new Date(calYear,calMonth,1).getDay();
     var daysInMonth=new Date(calYear,calMonth+1,0).getDate();
 
-    for (var i=0;i<firstDay;i++){var e=document.createElement("div");e.className="cal-day empty";grid.appendChild(e);}
-
-    for (var d=1;d<=daysInMonth;d++){
-      var cell=document.createElement("div");
-      var ds=calYear+"-"+String(calMonth+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
-      var isToday=(ds===todayStr);
-      cell.className="cal-day"+(isToday?" today":"");
-      var numEl=document.createElement("div"); numEl.className="cal-day-num"; numEl.textContent=d;
-      cell.appendChild(numEl);
-      var arts=newsMap[ds]||[];
-      if (arts.length>0) {
-        cell.classList.add("has-events");
-        var shown=0;
-        arts.forEach(function(art){
-          if(shown>=3)return;
-          var etype=getEventType(art.title);
-          var ev=document.createElement("div");
-          ev.className="cal-event "+EVT_CLS[etype];
-          ev.textContent="["+EVT_LABELS[etype]+"] "+art.title;
-          ev.title=art.title;
-          cell.appendChild(ev); shown++;
-        });
-        if(arts.length>3){var more=document.createElement("div");more.className="cal-more";more.textContent="+"+(arts.length-3)+"\uac74 \ub354";cell.appendChild(more);}
-        (function(dsCopy,artsCopy){cell.addEventListener("click",function(){showCalDetail(dsCopy,artsCopy);});})(ds,arts);
-      }
-      grid.appendChild(cell);
-    }
-  }
-
-  function showCalDetail(dateStr,arts){
-    var detail=document.getElementById("calDetail");
-    var MONTHS=["1\uc6d4","2\uc6d4","3\uc6d4","4\uc6d4","5\uc6d4","6\uc6d4","7\uc6d4","8\uc6d4","9\uc6d4","10\uc6d4","11\uc6d4","12\uc6d4"];
-    var dt=parseKST(dateStr);
-    var label=dt.getFullYear()+"\ub144 "+MONTHS[dt.getMonth()]+" "+dt.getDate()+"\uc77c \uc2e0\uc791 \uc18c\uc2dd";
-    var html='<div class="cal-detail"><div class="cal-detail-header">&#128197; '+esc(label)+' ('+arts.length+'\uac74)</div>';
-    arts.forEach(function(art){
-      var etype=getEventType(art.title);
-      html+='<div class="cal-detail-item">'+
-        '<span class="cal-evt-tag '+TAG_CLS[etype]+'">'+EVT_LABELS[etype]+'</span>'+
-        '<div class="cal-detail-title">'+esc(art.title)+'</div>'+
-        '<a class="cal-detail-link" href="'+esc(art.url)+'" target="_blank" rel="noopener">\uc6d0\ubb38\ubcf4\uae30</a>'+
-        '</div>';
+    // 이벤트 목록 빌드 (event_start 있는 것만)
+    var events=[];
+    DATA.forEach(function(art){
+      if(!art.event_start) return;
+      events.push({
+        type: art.event_type||"\ucd9c\uc2dc",
+        start: art.event_start,
+        end: art.event_end||art.event_start,
+        title: art.title, url: art.url
+      });
     });
-    html+='</div>';
-    detail.innerHTML=html;
-    detail.style.display="block";
-    detail.scrollIntoView({behavior:"smooth",block:"nearest"});
+    // 중복 제거
+    var seen={};
+    events=events.filter(function(e){
+      var k=e.type+e.start+e.end+e.title.substring(0,8);
+      if(seen[k])return false; seen[k]=true; return true;
+    });
+    events.sort(function(a,b){return a.start.localeCompare(b.start);});
+
+    // 이번 달 범위로 필터
+    var mStart=calYear+"-"+String(calMonth+1).padStart(2,"0")+"-01";
+    var mEnd=calYear+"-"+String(calMonth+1).padStart(2,"0")+"-"+String(daysInMonth).padStart(2,"0");
+    events=events.filter(function(e){return e.end>=mStart&&e.start<=mEnd;});
+
+    // 주 단위로 날짜 배분
+    var weeks=[], cur=new Array(firstDay).fill(null);
+    for(var d=1;d<=daysInMonth;d++){
+      var ds=calYear+"-"+String(calMonth+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+      cur.push({day:d,date:ds});
+      if(cur.length===7){weeks.push(cur);cur=[];}
+    }
+    if(cur.length>0){while(cur.length<7)cur.push(null);weeks.push(cur);}
+
+    // 주별 렌더링
+    var COL_W=100/7;
+    weeks.forEach(function(week){
+      var row=document.createElement("div"); row.className="cal-week-row";
+
+      week.forEach(function(di){
+        var cell=document.createElement("div");
+        if(!di){cell.className="cal-day empty";}
+        else{
+          cell.className="cal-day"+(di.date===today?" today":"");
+          var num=document.createElement("div"); num.className="cal-day-num"; num.textContent=di.day;
+          cell.appendChild(num);
+        }
+        row.appendChild(cell);
+      });
+
+      var valid=week.filter(Boolean);
+      if(!valid.length){grid.appendChild(row);return;}
+      var wS=valid[0].date, wE=valid[valid.length-1].date;
+
+      var wEvts=events.filter(function(e){return e.end>=wS&&e.start<=wE;});
+      var rowH=Math.max(80, 28+wEvts.length*22+6);
+      row.style.minHeight=rowH+"px";
+
+      wEvts.forEach(function(evt,idx){
+        var cS=-1,cE=-1;
+        week.forEach(function(di,col){
+          if(!di)return;
+          if(di.date>=evt.start&&cS<0)cS=col;
+          if(di.date<=evt.end)cE=col;
+        });
+        if(cS<0||cE<0)return;
+
+        var isS=(evt.start>=wS), isE=(evt.end<=wE);
+        var band=document.createElement("div");
+        var bc=BAND_CLS[evt.type]||"band-default";
+        band.className="cal-band "+bc;
+        if(isS&&isE) band.classList.add("band-single");
+        else if(isS) band.classList.add("band-start");
+        else if(isE) band.classList.add("band-end");
+        else         band.classList.add("band-mid");
+
+        band.style.left=(cS*COL_W+0.4)+"%";
+        band.style.width=((cE-cS+1)*COL_W-0.8)+"%";
+        band.style.top=(26+idx*22)+"px";
+
+        if(isS) band.textContent="["+evt.type+"] "+evt.title.substring(0,18);
+        band.title="["+evt.type+"] "+evt.title;
+        (function(e){band.addEventListener("click",function(){window.open(e.url,"_blank");});})(evt);
+        row.appendChild(band);
+      });
+
+      grid.appendChild(row);
+    });
+
+    if(!events.length){
+      var msg=document.createElement("div"); msg.className="cal-empty-msg";
+      msg.textContent="\uc774\ubc88 \ub2ec \uc2e0\uc791 \uc77c\uc815\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.";
+      grid.appendChild(msg);
+    }
   }
 
   document.getElementById("calPrev").addEventListener("click",function(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();});
@@ -1518,6 +1615,9 @@ def _make_articles_data() -> list:
             "content_score":   art.get("_content_score", 1),
             "covered_sites":   art.get("_covered_sites", []),
             "event_date":      art.get("event_date", ""),
+            "event_type":      art.get("event_type", ""),
+            "event_start":     art.get("event_start", ""),
+            "event_end":       art.get("event_end", ""),
         })
     return result
 
@@ -1575,6 +1675,60 @@ def update_dates_json(max_days: int = 30):
     )
     tmp.replace(dates_file)
     print(f"  dates.json 업데이트: {len(dates)}개 날짜")
+
+
+_ETYPE_MAP = [
+    ("사전예약",   ["사전예약", "사전 예약", "사전등록", "사전 등록"]),
+    ("CBT",        ["cbt", "클로즈드 베타", "클베", "비공개 테스트", "비공개베타"]),
+    ("OBT",        ["obt", "오픈 베타", "공개 베타"]),
+    ("신규서버",   ["신규 서버", "신서버", "새 서버"]),
+    ("종료",       ["서비스 종료", "서버 종료", "게임 종료", "서비스종료"]),
+    ("얼리액세스", ["얼리 액세스", "얼리엑세스", "early access"]),
+    ("출시",       ["정식 출시", "정식출시", "그랜드 오픈", "런칭", "서비스 시작", "정식 서비스"]),
+]
+
+def detect_event_type(text: str) -> str:
+    t = text.lower()
+    for etype, kws in _ETYPE_MAP:
+        if any(kw in t for kw in kws):
+            return etype
+    return "출시"
+
+
+def extract_event_range(title: str, body: str, ref_year: int):
+    """(event_start, event_end) YYYY-MM-DD 반환. 없으면 ('', '')"""
+    text = (title or "") + " " + (body or "")[:600]
+
+    def mk(y, mo, d):
+        if 1 <= mo <= 12 and 1 <= d <= 31:
+            return f"{y}-{mo:02d}-{d:02d}"
+        return None
+
+    # 명시적 범위: MM월 DD일 ~ MM월 DD일
+    m = re.search(
+        r"(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*[~\-]\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일",
+        text
+    )
+    if m:
+        s = mk(ref_year, int(m.group(1)), int(m.group(2)))
+        e = mk(ref_year, int(m.group(3)), int(m.group(4)))
+        if s and e and s <= e:
+            return s, e
+
+    # 단일 날짜 수집
+    dates = []
+    for m2 in re.finditer(r"(20\d\d)\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일", text):
+        d = mk(int(m2.group(1)), int(m2.group(2)), int(m2.group(3)))
+        if d:
+            dates.append(d)
+    for m2 in re.finditer(r"(\d{1,2})\s*월\s*(\d{1,2})\s*일", text):
+        d = mk(ref_year, int(m2.group(1)), int(m2.group(2)))
+        if d:
+            dates.append(d)
+    dates = sorted(set(dates))
+    if dates:
+        return dates[0], dates[0]
+    return "", ""
 
 
 def extract_event_date(title: str, body: str, ref_year: int) -> str:
@@ -1645,7 +1799,9 @@ def extract_date_from_soup(soup) -> "datetime | None":
 def fetch_article_body(url: str, timeout: int = 10):
     """기사 원문 URL에서 (본문 텍스트, 발행일) 반환"""
     try:
-        r = requests.get(url, headers=HEADERS, timeout=timeout, allow_redirects=True)
+        session = requests.Session()
+        session.headers.update(ARTICLE_HEADERS)
+        r = session.get(url, timeout=timeout, allow_redirects=True)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "lxml")
 
@@ -1721,19 +1877,30 @@ def enrich_articles_body(win_start=None, win_end=None):
         if removed:
             print(f"  날짜 재필터: {removed}건 제거 (범위 외)")
 
-    # ── 이벤트 날짜 추출 (신작 관련 + 높은 content_score 기사 우선) ──────────
+    # ── 이벤트 날짜 + 타입 + 기간 추출 ────────────────────────────────────────
     ref_year = datetime.now(KST).year
     for art in ARTICLES:
-        if art.get("event_date"):        # 이미 있으면 스킵
+        if art.get("_content_score", 0) < 4:
             continue
-        if art.get("_content_score", 0) >= 4:   # S+·S·A·B·C 등급만
-            ev = extract_event_date(
-                art.get("title", ""),
-                art.get("body_text", ""),
-                ref_year,
-            )
+        t = art.get("title", "")
+        b = art.get("body_text", "")
+        # 이벤트 타입 (신작 소식 카테고리 기사만)
+        if art.get("cat_html") in ("신작 소식", "게임 소식"):
+            art["event_type"] = detect_event_type(t + " " + b)
+        # 이벤트 날짜(단일) — 기존 로직
+        if not art.get("event_date"):
+            ev = extract_event_date(t, b, ref_year)
             if ev:
                 art["event_date"] = ev
+        # 이벤트 기간 (start/end)
+        if not art.get("event_start"):
+            es, ee = extract_event_range(t, b, ref_year)
+            if es:
+                art["event_start"] = es
+                art["event_end"]   = ee
+            elif art.get("event_date"):
+                art["event_start"] = art["event_date"]
+                art["event_end"]   = art["event_date"]
 
     filled = sum(1 for a in ARTICLES if a.get("body_text"))
     ev_cnt = sum(1 for a in ARTICLES if a.get("event_date"))
