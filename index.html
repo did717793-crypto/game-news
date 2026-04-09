@@ -346,7 +346,9 @@ var RANGE_END   = null;
 // ──────────────────────────────────────────────────────
 var NEW_ET  = new Set(['사전예약','CBT','OBT','출시','신규서버','얼리액세스','소프트론칭']);
 var SAFE_ET = new Set(['사전예약','CBT','OBT','신규서버','얼리액세스']);
-var IND_CATS = new Set(['업계 동향','IR','인사','M&A','규제','인터뷰','채용','기술']);
+// 실제 JSON category 값: '신작 소식', '게임 소식', '일반', '게임 회사 동향'
+var NEW_CATS = new Set(['신작 소식']);
+var IND_CATS = new Set(['일반','게임 소식','게임 회사 동향']);
 var EXCL_HARD = ['신규 캐릭터','신규캐릭터','캐릭터 출시','캐릭터출시','콜라보','콜라버레이션','카페 콜라보','반주년','기념 이벤트','기념일','협업 이벤트','신규 스킨','스킨 출시'];
 var EXCL_SOFT = ['업데이트','패치','밸런스','이벤트 시작','이벤트 오픈','시즌 시작','시즌 오픈','점검','신규 콘텐츠','캐릭터 소개','캐릭터 공개'];
 
@@ -364,7 +366,15 @@ function parseIso(s){ if(!s)return null; var p=s.split('-'); return new Date(+p[
 
 function kst(s){
   if(!s) return null;
-  var d = new Date(s.indexOf('T')>0 ? s : s+'T00:00:00+09:00');
+  var d;
+  if(s.indexOf('T')>0){
+    d=new Date(s);                               // 이미 ISO 형식
+  } else if(s.indexOf(' ')>0){
+    // "YYYY-MM-DD HH:MM" → "YYYY-MM-DDTHH:MM:00+09:00"
+    d=new Date(s.replace(' ','T')+':00+09:00');
+  } else {
+    d=new Date(s+'T00:00:00+09:00');             // "YYYY-MM-DD"
+  }
   return isNaN(d)?null:d;
 }
 function kstDate(s){
@@ -513,9 +523,12 @@ function isExcluded(a){
   return false;
 }
 function isNewRelease(a){
-  if(IND_CATS.has(a.cat_html||'')) return false;
-  if(isExcluded(a)) return false;
-  return a.is_new_event||NEW_ET.has(a.event_type||'');
+  var cat=a.category||'';
+  // '신작 소식' 카테고리이거나 is_new_event 플래그가 있으면 신작
+  if(NEW_CATS.has(cat)||a.is_new_event) return !isExcluded(a);
+  // event_type이 NEW_ET에 속하면 신작
+  if(NEW_ET.has(a.event_type||'')) return !isExcluded(a);
+  return false;
 }
 function isIndustry(a){ return !isNewRelease(a); }
 
@@ -773,7 +786,7 @@ function renderNewsList(articles){
     groups[key].forEach(function(a){
       var idx=storeA(a);
       var title=cleanT(a.cleaned_title||a.title||'');
-      var genre=a.genre||'', et=a.event_type||'', cat=a.cat_html||'', src=a.source_name||'';
+      var genre=a.genre||'', et=a.event_type||'', cat=a.category||'', src=a.site||'';
       var summary=a.summary||'';
       var dateStr=fmtMD(a.event_start||a.pub_date||a.collected_at||'');
       html+='<div class="news-card" onclick="openModalByIdx('+idx+')">'
@@ -822,7 +835,7 @@ function renderIndustryList(articles){
     groups[key].forEach(function(a){
       var idx=storeA(a);
       var title=cleanT(a.cleaned_title||a.title||'');
-      var cat=a.cat_html||'', src=a.source_name||'';
+      var cat=a.category||'', src=a.site||'';
       var dateStr=fmtMD(a.pub_date||a.collected_at||'');
       html+='<div class="ind-card" onclick="openModalByIdx('+idx+')">'
         +'<div class="ind-header">'
@@ -843,7 +856,7 @@ function renderIndustryList(articles){
 function openModal(a){
   if(!a) return;
   var title=cleanT(a.cleaned_title||a.title||'');
-  var cat=a.cat_html||'',et=a.event_type||'',genre=a.genre||'',src=a.source_name||'';
+  var cat=a.category||'',et=a.event_type||'',genre=a.genre||'',src=a.site||'';
   var dateStr=a.event_start
     ?fmtYMD(a.event_start)+(a.event_end?' ~ '+fmtYMD(a.event_end):'')
     :fmtYMD(a.pub_date||a.collected_at||'');
@@ -861,7 +874,7 @@ function openModal(a){
   if(summary){sumEl.textContent=summary;sumEl.style.display='';}
   else sumEl.style.display='none';
 
-  document.getElementById('modal-body-txt').textContent=a.body_text||(summary?'':'본문 없음');
+  document.getElementById('modal-body-txt').textContent=a.body||a.body_text||(summary?'':'본문 없음');
   var linkEl=document.getElementById('modal-link');
   var link=a.link||a.url||'';
   if(link){linkEl.href=link;linkEl.style.display='';}else linkEl.style.display='none';
