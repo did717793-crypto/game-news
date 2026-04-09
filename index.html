@@ -369,12 +369,33 @@ var EXCL_ABSOLUTE = [
   '가처분 신청','소송',
 ];
 
+// EXCL_SAFE_HARD: SAFE_ET(CBT/사전예약/OBT)여도 무조건 제외
+// ── 기존 게임의 방송/이벤트/업데이트/캐릭터 기사를 차단
+var EXCL_SAFE_HARD = [
+  // 방송/홍보 기사
+  '공식 방송','방송','퍼스트 다이브','다이브 쇼','라이브 방송',
+  // 출시 혜택/보상 기사 (출시 자체가 아닌 부가 혜택)
+  '지급','혜택','보상 지급','출시 기념 지급',
+  // 업데이트성 기사 (CBT 중 업데이트 = 신규 게임 소식 아님)
+  '업데이트','첫 업데이트','업데이트 내용',
+  // 캐릭터 소개 기사
+  '신규 캐릭터','캐릭터 소개','캐릭터 공개',
+  // 가챠/스킬 기사
+  'ssr','스킬',
+  // 이벤트/혜택 기사
+  '이벤트','콜라보','시즌',
+];
+
 // EXCL_HARD: SAFE_ET 아닌 경우 제외 (출시 태그여도 오분류 차단)
 var EXCL_HARD = [
   // ── 기존 게임 업데이트/패치 패턴 (출시 후 추가 등)
   '추가된다','추가 예정','출시 후','론칭 후','출시 이후',
   '업데이트','패치','핫픽스','개선','버그 수정',
   '버전 업데이트','대규모 업데이트','개발자 노트',
+  // ── 방송/홍보 기사 (신규 추가)
+  '공식 방송','방송','퍼스트 다이브','다이브 쇼',
+  // ── 혜택/보상 기사 (신규 추가)
+  '지급','혜택',
   // ── 캐릭터 관련
   '신규 캐릭터','신규캐릭터','캐릭터 출시','캐릭터출시',
   '캐릭터 공개','스킬','스킬 공개','스킬 정보','스킬 추가',
@@ -684,13 +705,17 @@ function isExcluded(a){
   var sm  = stripHtml(a.summary||'').toLowerCase();
   var bd  = stripHtml((a.body||'').slice(0,500)).toLowerCase();
   var full = t + ' ' + sm + ' ' + bd;  // 제목+요약+본문앞500자 합산
+  var ts   = t + ' ' + sm;             // 제목+요약 (SAFE_ET 체크용 — body 오탐 방지)
   // 1. 절대 제외 — event_type 무관
   if(EXCL_ABSOLUTE.some(function(k){return full.indexOf(k)!==-1;})) return true;
-  // 2. SAFE_ET(사전예약/CBT/OBT 등)는 이하 필터 면제
+  // 2. SAFE_ET여도 제외 — 방송/이벤트/업데이트/캐릭터 등 명백한 오분류
+  //    (제목+요약만 검사: body에서 오탐 방지)
+  if(EXCL_SAFE_HARD.some(function(k){return ts.indexOf(k)!==-1;})) return true;
+  // 3. SAFE_ET(사전예약/CBT/OBT 등)는 이하 필터 면제
   if(SAFE_ET.has(a.event_type||'')) return false;
-  // 3. 하드 제외 — 출시 태그여도 차단
+  // 4. 하드 제외 — 출시 태그여도 차단
   if(EXCL_HARD.some(function(k){return full.indexOf(k)!==-1;})) return true;
-  // 4. 소프트 제외 — event_type이 NEW_ET 아닌 기사에만
+  // 5. 소프트 제외 — event_type이 NEW_ET 아닌 기사에만
   if(!NEW_ET.has(a.event_type||'') && EXCL_SOFT.some(function(k){return full.indexOf(k)!==-1;})) return true;
   return false;
 }
