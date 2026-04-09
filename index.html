@@ -377,7 +377,7 @@ var EXCL_HARD = [
   '버전 업데이트','대규모 업데이트','개발자 노트',
   // ── 캐릭터 관련
   '신규 캐릭터','신규캐릭터','캐릭터 출시','캐릭터출시',
-  '캐릭터 공개','스킬 공개','스킬 정보','스킬 추가',
+  '캐릭터 공개','스킬','스킬 공개','스킬 정보','스킬 추가',
   'ssr','신규 ssr','새 ssr',
   // ── 콜라보/이벤트
   '콜라보','콜라버레이션','카페 콜라보','협업 이벤트',
@@ -502,41 +502,16 @@ function stripHtml(s){
 // ──────────────────────────────────────────────────────
 // makeSummary: 카드 요약 정제 (제목 중복 제거 + 1줄 요약)
 // ──────────────────────────────────────────────────────
-function extractCleanBody(body){
-  if(!body) return '';
-  body=stripHtml(body);
-  // 한글 비율이 너무 낮으면 포기 (루리웹 바이너리 등)
-  var kr=(body.match(/[가-힣]/g)||[]).length;
-  if(kr<20) return '';
-  // 게임메카 헤더 do-while 반복 제거 ("값입니다|아닙니다." 패턴)
-  var prev;
-  do{ prev=body; body=body.replace(/^[\s\S]*?(?:아닙니다|값입니다)\.\s*/,''); }
-  while(body!==prev && body.length>0);
-  // 인벤: "기자 (email)" 헤더 제거
-  body=body.replace(/^.*?\) 기자\s*\([^\)]+\)\s*/,'');
-  // 앞에 한글 없는 잡음 제거
-  body=body.replace(/^[^가-힣]{0,80}(?=[가-힣])/,'');
-  // 잔류 메타 잡음 체크
-  if(/(트위터.*노출|게임메카 내부|RSS 주소복사)/i.test(body.slice(0,100))) return '';
-  return body.trim();
-}
-
-function firstSentence(text){
-  if(!text) return '';
-  // 한국어 종결 패턴: 최소 10자, 최대 120자
-  var m=text.match(/^[\s\S]{10,120}?[다요죠네임까며]\./);
-  if(m) return m[0].replace(/\n/g,' ').trim();
-  // 영문/혼합 종결
-  var m2=text.match(/^.{10,120}?[.!?](?:\s|$)/);
-  if(m2) return m2[0].replace(/\n/g,' ').trim();
-  return text.replace(/\n/g,' ').slice(0,100).trim();
-}
+// BODY_JUNK: 요약에 포함되면 안 되는 메타/쓰레기 패턴
+var BODY_JUNK = /View|RSS|댓글|주소복사|@|기자|SNS|노출수|값입니다|아닙니다|클릭수|자료제공/i;
 
 function isSumRedundant(summary, title){
-  if(!summary||summary.length<5) return true;
+  // 15자 미만이면 무조건 폐기
+  if(!summary||summary.length<15) return true;
   var s=summary.trim().toLowerCase();
   var t=title.trim().toLowerCase();
   if(s===t) return true;
+  // summary가 제목을 통째로 포함
   if(t.length>8 && s.indexOf(t)!==-1) return true;
   // 제목 핵심 단어 70% 이상 겹치면 중복
   var words=t.split(/[\s,:·\-]+/).filter(function(w){return w.length>=2;});
@@ -545,18 +520,38 @@ function isSumRedundant(summary, title){
   return (hit/words.length)>=0.7;
 }
 
+function firstCleanSentence(body){
+  // 1) HTML 제거
+  var text=stripHtml(body);
+  if(!text) return '';
+  // 2) 한글 비율 확인 (바이너리/영문 전용 포기)
+  if((text.match(/[가-힣]/g)||[]).length < 15) return '';
+  // 3) 개행 통일
+  text=text.replace(/\r?\n/g,' ').replace(/\s{2,}/g,' ');
+  // 4) 정규식으로 문장 단위 추출 (종결어미까지 포함)
+  var RE=/[^\n]{8,150}?(?:[다요죠네임까며습]\.|[.!?])(?=\s|$)/g;
+  var m;
+  while((m=RE.exec(text))!==null){
+    var p=m[0].trim();
+    if(p.length<15) continue;        // 너무 짧음
+    if(BODY_JUNK.test(p)) continue;  // 쓰레기 문장
+    return p;
+  }
+  return '';
+}
+
 function makeSummary(a){
   var title=cleanT(a.cleaned_title||a.title||'');
+  // 1) summary 우선 사용 (HTML 제거 후)
   var s=stripHtml(a.summary||'');
-  // summary가 제목과 중복이거나 없으면 본문 첫 문장으로 대체 시도
-  if(isSumRedundant(s,title)){
-    var body=extractCleanBody(a.body||'');
-    var sent=firstSentence(body);
-    if(sent && !isSumRedundant(sent,title)) s=sent;
-    else if(!s && sent) s=sent;
+  // 2) summary가 중복/짧음/쓰레기면 폐기 후 body에서 생성
+  if(isSumRedundant(s,title)||BODY_JUNK.test(s)){
+    var sent=firstCleanSentence(a.body||'');
+    if(sent&&!isSumRedundant(sent,title)) s=sent;
+    else if(!s) s=sent;   // summary 자체가 없으면 body 결과라도 사용
   }
-  // 100자 초과 truncate
-  if(s.length>100) s=s.slice(0,97)+'…';
+  // 3) 100자 제한
+  if(s.length>100) s=s.slice(0,97)+'...';
   return s;
 }
 
@@ -687,7 +682,8 @@ function setEtype(btn){
 function isExcluded(a){
   var t   = cleanT(a.cleaned_title||a.title||'').toLowerCase();
   var sm  = stripHtml(a.summary||'').toLowerCase();
-  var full = t + ' ' + sm;   // 제목 + 요약 합산 — '출시' 태그여도 요약에 패턴 있으면 차단
+  var bd  = stripHtml((a.body||'').slice(0,500)).toLowerCase();
+  var full = t + ' ' + sm + ' ' + bd;  // 제목+요약+본문앞500자 합산
   // 1. 절대 제외 — event_type 무관
   if(EXCL_ABSOLUTE.some(function(k){return full.indexOf(k)!==-1;})) return true;
   // 2. SAFE_ET(사전예약/CBT/OBT 등)는 이하 필터 면제
