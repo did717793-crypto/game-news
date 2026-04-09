@@ -369,27 +369,31 @@ var EXCL_ABSOLUTE = [
   '가처분 신청','소송',
 ];
 
-// EXCL_HARD: SAFE_ET 아닌 경우 제외 (+ 출시 태그여도 명백한 오분류 차단)
+// EXCL_HARD: SAFE_ET 아닌 경우 제외 (출시 태그여도 오분류 차단)
 var EXCL_HARD = [
-  // 캐릭터 관련
-  '신규 캐릭터','신규캐릭터','캐릭터 출시','캐릭터출시',
-  'ssr','신규 ssr','새 ssr',
-  // 콜라보/이벤트
-  '콜라보','콜라버레이션','카페 콜라보','협업 이벤트',
-  '반주년','기념 이벤트','기념일',
-  // 스킨/외형
-  '신규 스킨','스킨 출시','외형 수정','재디자인',
-  // 클래스/시스템
-  '신규 클래스','클래스 출시',
-  // DLC / OST
-  'dlc','ost',
-  '사운드트랙',
-  // 업데이트류 (출시 태그여도 실제로는 업데이트)
+  // ── 기존 게임 업데이트/패치 패턴 (출시 후 추가 등)
+  '추가된다','추가 예정','출시 후','론칭 후','출시 이후',
+  '업데이트','패치','핫픽스','개선','버그 수정',
   '버전 업데이트','대규모 업데이트','개발자 노트',
-  // 비즈니스 기사
+  // ── 캐릭터 관련
+  '신규 캐릭터','신규캐릭터','캐릭터 출시','캐릭터출시',
+  '캐릭터 공개','스킬 공개','스킬 정보','스킬 추가',
+  'ssr','신규 ssr','새 ssr',
+  // ── 콜라보/이벤트
+  '콜라보','콜라버레이션','카페 콜라보','협업 이벤트',
+  '이벤트','반주년','기념 이벤트','기념일',
+  // ── 시즌
+  '시즌','신규 시즌','시즌 업데이트',
+  // ── 스킨/외형
+  '신규 스킨','스킨 출시','외형 수정','재디자인',
+  // ── 클래스/시스템
+  '신규 클래스','클래스 출시',
+  // ── DLC / OST
+  'dlc','ost','사운드트랙',
+  // ── 비즈니스 기사
   '구독 서비스','인터뷰','실적','매출','적자','흑자',
   '후원','크라우드펀딩',
-  // e스포츠 대회 기사
+  // ── e스포츠
   '본선 개막','시즌1 개막','e스포츠 대회',
 ];
 var EXCL_SOFT = [
@@ -493,6 +497,67 @@ function stripHtml(s){
     .replace(/&#[0-9]+;/g,'')
     .replace(/[ \t]{2,}/g,' ')        // 연속 공백 정리
     .trim();
+}
+
+// ──────────────────────────────────────────────────────
+// makeSummary: 카드 요약 정제 (제목 중복 제거 + 1줄 요약)
+// ──────────────────────────────────────────────────────
+function extractCleanBody(body){
+  if(!body) return '';
+  body=stripHtml(body);
+  // 한글 비율이 너무 낮으면 포기 (루리웹 바이너리 등)
+  var kr=(body.match(/[가-힣]/g)||[]).length;
+  if(kr<20) return '';
+  // 게임메카 헤더 do-while 반복 제거 ("값입니다|아닙니다." 패턴)
+  var prev;
+  do{ prev=body; body=body.replace(/^[\s\S]*?(?:아닙니다|값입니다)\.\s*/,''); }
+  while(body!==prev && body.length>0);
+  // 인벤: "기자 (email)" 헤더 제거
+  body=body.replace(/^.*?\) 기자\s*\([^\)]+\)\s*/,'');
+  // 앞에 한글 없는 잡음 제거
+  body=body.replace(/^[^가-힣]{0,80}(?=[가-힣])/,'');
+  // 잔류 메타 잡음 체크
+  if(/(트위터.*노출|게임메카 내부|RSS 주소복사)/i.test(body.slice(0,100))) return '';
+  return body.trim();
+}
+
+function firstSentence(text){
+  if(!text) return '';
+  // 한국어 종결 패턴: 최소 10자, 최대 120자
+  var m=text.match(/^[\s\S]{10,120}?[다요죠네임까며]\./);
+  if(m) return m[0].replace(/\n/g,' ').trim();
+  // 영문/혼합 종결
+  var m2=text.match(/^.{10,120}?[.!?](?:\s|$)/);
+  if(m2) return m2[0].replace(/\n/g,' ').trim();
+  return text.replace(/\n/g,' ').slice(0,100).trim();
+}
+
+function isSumRedundant(summary, title){
+  if(!summary||summary.length<5) return true;
+  var s=summary.trim().toLowerCase();
+  var t=title.trim().toLowerCase();
+  if(s===t) return true;
+  if(t.length>8 && s.indexOf(t)!==-1) return true;
+  // 제목 핵심 단어 70% 이상 겹치면 중복
+  var words=t.split(/[\s,:·\-]+/).filter(function(w){return w.length>=2;});
+  if(!words.length) return false;
+  var hit=words.filter(function(w){return s.indexOf(w)!==-1;}).length;
+  return (hit/words.length)>=0.7;
+}
+
+function makeSummary(a){
+  var title=cleanT(a.cleaned_title||a.title||'');
+  var s=stripHtml(a.summary||'');
+  // summary가 제목과 중복이거나 없으면 본문 첫 문장으로 대체 시도
+  if(isSumRedundant(s,title)){
+    var body=extractCleanBody(a.body||'');
+    var sent=firstSentence(body);
+    if(sent && !isSumRedundant(sent,title)) s=sent;
+    else if(!s && sent) s=sent;
+  }
+  // 100자 초과 truncate
+  if(s.length>100) s=s.slice(0,97)+'…';
+  return s;
 }
 
 // ──────────────────────────────────────────────────────
@@ -620,15 +685,17 @@ function setEtype(btn){
 // EXCLUSION / CLASSIFICATION
 // ──────────────────────────────────────────────────────
 function isExcluded(a){
-  var t=cleanT(a.cleaned_title||a.title||'').toLowerCase();
-  // 1. 절대 제외 — event_type 무관 (게임 외 기사, 실적, 공연 등)
-  if(EXCL_ABSOLUTE.some(function(k){return t.indexOf(k)!==-1;})) return true;
+  var t   = cleanT(a.cleaned_title||a.title||'').toLowerCase();
+  var sm  = stripHtml(a.summary||'').toLowerCase();
+  var full = t + ' ' + sm;   // 제목 + 요약 합산 — '출시' 태그여도 요약에 패턴 있으면 차단
+  // 1. 절대 제외 — event_type 무관
+  if(EXCL_ABSOLUTE.some(function(k){return full.indexOf(k)!==-1;})) return true;
   // 2. SAFE_ET(사전예약/CBT/OBT 등)는 이하 필터 면제
   if(SAFE_ET.has(a.event_type||'')) return false;
-  // 3. 하드 제외 키워드
-  if(EXCL_HARD.some(function(k){return t.indexOf(k)!==-1;})) return true;
-  // 4. event_type 없는 기사에만 적용되는 소프트 제외
-  if(!NEW_ET.has(a.event_type||'') && EXCL_SOFT.some(function(k){return t.indexOf(k)!==-1;})) return true;
+  // 3. 하드 제외 — 출시 태그여도 차단
+  if(EXCL_HARD.some(function(k){return full.indexOf(k)!==-1;})) return true;
+  // 4. 소프트 제외 — event_type이 NEW_ET 아닌 기사에만
+  if(!NEW_ET.has(a.event_type||'') && EXCL_SOFT.some(function(k){return full.indexOf(k)!==-1;})) return true;
   return false;
 }
 function isNewRelease(a){
@@ -896,7 +963,7 @@ function renderNewsList(articles){
       var idx=storeA(a);
       var title=cleanT(a.cleaned_title||a.title||'');
       var genre=a.genre||'', et=a.event_type||'', cat=a.category||'', src=a.site||'';
-      var summary=stripHtml(a.summary||'');
+      var summary=makeSummary(a);
       var dateStr=fmtMD(a.event_start||a.pub_date||a.collected_at||'');
       html+='<div class="news-card" onclick="openModalByIdx('+idx+')">'
         +'<div class="nc-left">'
