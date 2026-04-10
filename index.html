@@ -79,6 +79,11 @@
     .h-stat b{color:var(--primary);}
     .theme-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;}
     .theme-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+    /* ── PAGE NAV ── */
+    .page-nav{display:flex;gap:2px;background:var(--surface2);border-radius:8px;padding:3px;}
+    .pn-link{padding:4px 14px;font-size:12px;font-weight:700;color:var(--text3);border-radius:6px;transition:all .15s;white-space:nowrap;}
+    .pn-link:hover{color:var(--primary);}
+    .pn-link.active{background:var(--primary);color:#fff;}
 
     /* ── KPI BAR ── */
     .kpi-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:0;position:sticky;top:52px;z-index:290;overflow-x:auto;}
@@ -222,6 +227,10 @@
 <!-- ── HEADER ── -->
 <header class="g-header">
   <div class="logo">GAME<span>PULSE</span></div>
+  <nav class="page-nav">
+    <a href="schedule.html" class="pn-link">📅 신작 일정</a>
+    <a href="news.html" class="pn-link">📰 뉴스</a>
+  </nav>
   <div class="h-spacer"></div>
   <span class="h-stat" id="h-stat">로딩 중...</span>
   <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">🌙 다크</button>
@@ -670,6 +679,42 @@ function gameColor(name) {
   return colorMap[name];
 }
 
+// 이벤트 타입 → 표시 레이블
+var ET_LABEL = {
+  '출시'   : '[출시]',
+  'CBT'    : '[CBT]',
+  'OBT'    : '[OBT]',
+  '사전예약': '[사전예약]',
+  '신규서버': '[서버]',
+  '얼리액세스': '[얼리]',
+  '소프트론칭': '[소프트]'
+};
+
+// 게임명 추출: 따옴표 → 쉼표 뒤 → 이벤트 키워드 제거 → 앞 3단어
+function extractGameName(rawTitle) {
+  if (!rawTitle) return '';
+  var t = cleanT(rawTitle);
+  // 1) 따옴표 안 텍스트
+  var m = t.match(/[\u2018\u2019\u201c\u201d''"]([^\u2018\u2019\u201c\u201d'"]{2,25})[\u2018\u2019\u201c\u201d'"]/);
+  if (!m) m = t.match(/'([^']{2,20})'/) || t.match(/"([^"]{2,20})"/);
+  if (m) return m[1].trim();
+  // 2) 쉼표 뒤 핵심 명사
+  var ci = Math.max(t.lastIndexOf(','), t.lastIndexOf('\uff0c'));
+  if (ci >= 0) {
+    var after = t.slice(ci + 1).trim()
+      .replace(/\s*(출시|사전예약|CBT|OBT|오픈|시작|런칭|공개|예정|스팀|글로벌|한국|모바일|PC|\d+일|\d+월).*$/i, '')
+      .trim();
+    if (after.length >= 2 && after.length <= 25) return after;
+  }
+  // 3) 이벤트 접미사 제거
+  var stripped = t
+    .replace(/\s+(정식\s*)?(출시|사전예약|CBT|OBT|오픈|시작|런칭|공개|예정|스타트).*$/i, '')
+    .trim();
+  if (stripped && stripped.length >= 2 && stripped.length <= 30) return stripped;
+  // 4) 앞 3단어 fallback
+  return t.split(/\s+/).slice(0, 3).join(' ');
+}
+
 function assignLanes(events, mStart, mEnd, totalDays) {
   var laneEnds = [];
   events.forEach(function(ev) {
@@ -757,8 +802,10 @@ function buildGantt(articles) {
     var leftPct = ((ev._s - 1) / totalDays * 100).toFixed(3);
     var widthPct = ((ev._e - ev._s + 1) / totalDays * 100).toFixed(3);
     var topPx = ev.lane * laneH + 4;
-    var gn = cleanT(ev.cleaned_title || ev.title || '');
-    var label = (ev.event_type ? '[' + ev.event_type + '] ' : '') + gn;
+    var gn       = cleanT(ev.cleaned_title || ev.title || '');
+    var gameName = extractGameName(gn);
+    var etLabel  = ET_LABEL[ev.event_type || ''] || (ev.event_type ? '[' + ev.event_type + ']' : '');
+    var label    = etLabel ? etLabel + ' ' + gameName : gameName;
     var bar = document.createElement('div');
     bar.className = 'tl-bar ' + gameColor(gn);
     bar.style.left = leftPct + '%';

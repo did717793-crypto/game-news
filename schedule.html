@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GAME PULSE — 신작 스케줄러</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+    :root {
+      --bg:#f4f5f7; --surface:#ffffff; --surface2:#f0f1f4; --border:#dde1e7;
+      --text:#1e1e2e; --text2:#555770; --text3:#8889a0; --primary:#5c4ee8;
+      --primary-soft:#ede9ff; --primary-dim:#8b7ff0; --accent-r:#e05555;
+      --accent-g:#00a878; --accent-y:#e8a020; --accent-b:#3b82f6;
+      --header-bg:#ffffff; --header-border:#dde1e7; --kpi-bg:#ffffff;
+      --tag-bg:#ede9ff; --tag-color:#5c4ee8; --gantt-bg:#f8f9fb;
+      --gantt-head:#eef0f4; --today-line:#e05555; --modal-overlay:rgba(0,0,0,0.35);
+      --scrollbar:#c8ccd8; --scrollbar-hover:#a0a5c0;
+    }
+    [data-theme="dark"] {
+      --bg:#0f0e1a; --surface:#1a1830; --surface2:#14122a; --border:#2d2850;
+      --text:#e8e4ff; --text2:#a29bfe; --text3:#636e72; --primary:#6c5ce7;
+      --primary-soft:#2d2850; --primary-dim:#9d8fff; --accent-r:#e17055;
+      --accent-g:#00b894; --accent-y:#fdcb6e; --accent-b:#74b9ff;
+      --header-bg:#1a1830; --header-border:#2d2850; --kpi-bg:#14122a;
+      --tag-bg:#2d2850; --tag-color:#a29bfe; --gantt-bg:#14122a;
+      --gantt-head:#1a1830; --today-line:#e17055; --modal-overlay:rgba(0,0,0,0.6);
+      --scrollbar:#3d3870; --scrollbar-hover:#6c5ce7;
+    }
+
+    body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo','Malgun Gothic',-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;line-height:1.5;min-height:100vh;transition:background .2s,color .2s;}
+    a{color:inherit;text-decoration:none;}
+    ::-webkit-scrollbar{width:5px;height:5px;}
+    ::-webkit-scrollbar-track{background:var(--surface2);}
+    ::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:3px;}
+    ::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-hover);}
+
+    /* ── HEADER ── */
+    .g-header{background:var(--header-bg);border-bottom:1px solid var(--header-border);padding:0 20px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:300;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+    .logo{font-size:15px;font-weight:900;color:var(--primary);letter-spacing:-.3px;white-space:nowrap;}
+    .logo span{color:var(--text);}
+    .h-spacer{flex:1;}
+    .h-stat{font-size:11px;color:var(--text3);white-space:nowrap;}
+    .h-stat b{color:var(--primary);}
+    .theme-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;}
+    .theme-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+    /* ── PAGE NAV ── */
+    .page-nav{display:flex;gap:2px;background:var(--surface2);border-radius:8px;padding:3px;}
+    .pn-link{padding:4px 14px;font-size:12px;font-weight:700;color:var(--text3);border-radius:6px;transition:all .15s;white-space:nowrap;}
+    .pn-link:hover{color:var(--primary);}
+    .pn-link.active{background:var(--primary);color:#fff;}
+
+    /* ── KPI BAR ── */
+    .kpi-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:0;position:sticky;top:52px;z-index:290;overflow-x:auto;}
+    .kpi-bar::-webkit-scrollbar{height:0;}
+    .kpi-item{display:flex;flex-direction:column;align-items:center;padding:8px 24px;border-right:1px solid var(--border);min-width:110px;cursor:pointer;transition:background .15s;position:relative;}
+    .kpi-item:last-child{border-right:none;}
+    .kpi-item:hover{background:var(--primary-soft);}
+    .kpi-item.active{background:var(--primary-soft);}
+    .kpi-label{font-size:10px;font-weight:700;color:var(--text3);white-space:nowrap;margin-bottom:2px;}
+    .kpi-val{font-size:24px;font-weight:900;line-height:1.1;}
+    .kv-r{color:var(--accent-r);}
+    .kv-g{color:var(--accent-g);}
+    .kv-y{color:var(--accent-y);}
+    .kv-b{color:var(--accent-b);}
+    .kpi-panel{display:none;position:absolute;top:100%;left:0;min-width:260px;background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:400;max-height:320px;overflow-y:auto;}
+    .kpi-item.active .kpi-panel{display:block;}
+    .kpi-panel-title{font-size:10px;font-weight:700;color:var(--text3);padding:8px 14px 4px;border-bottom:1px solid var(--border);}
+    .kpi-panel-item{padding:7px 14px;font-size:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+    .kpi-panel-item:last-child{border-bottom:none;}
+    .kpi-panel-item .game-name{font-weight:600;color:var(--text);flex:1;}
+    .kpi-panel-item .game-date{font-size:11px;color:var(--text3);}
+    .kpi-panel-item .game-badge{font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;background:var(--tag-bg);color:var(--tag-color);white-space:nowrap;}
+    .kpi-empty{padding:14px;font-size:12px;color:var(--text3);text-align:center;}
+
+    /* ── MONTH NAV BAR ── */
+    .month-nav{background:var(--surface2);border-bottom:1px solid var(--border);padding:6px 20px;display:flex;align-items:center;gap:8px;position:sticky;top:102px;z-index:280;}
+    .month-nav-btn{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s;}
+    .month-nav-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+    .month-select{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:12px;font-weight:700;color:var(--text);outline:none;cursor:pointer;}
+    .month-select:focus{border-color:var(--primary);}
+    .month-label{font-size:13px;font-weight:800;color:var(--primary);}
+    .mns{flex:1;}
+
+    /* ── FILTER BAR ── */
+    .filter-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;position:sticky;top:142px;z-index:270;}
+    .filter-label{font-size:11px;font-weight:700;color:var(--text3);}
+    .f-chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s;}
+    .f-chip:hover{border-color:var(--primary);color:var(--primary);}
+    .f-chip.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+    .filter-sep{width:1px;height:18px;background:var(--border);margin:0 4px;}
+
+    /* ── GANTT ── */
+    .gantt-wrap{overflow-x:auto;margin:12px 20px;border:1px solid var(--border);border-radius:8px;background:var(--gantt-bg);}
+    .gantt-head{display:grid;background:var(--gantt-head);border-bottom:1px solid var(--border);height:30px;}
+    .gantt-day{font-size:10px;font-weight:700;color:var(--text3);display:flex;align-items:center;justify-content:center;border-right:1px solid var(--border);min-width:0;}
+    .gantt-day.today-col{color:var(--accent-r);font-weight:900;}
+    .gantt-day:last-child{border-right:none;}
+    .gantt-body{position:relative;}
+    .gantt-lane{display:grid;height:28px;position:relative;border-bottom:1px solid var(--border);}
+    .gantt-lane:last-child{border-bottom:none;}
+    .gantt-cell{border-right:1px solid var(--border);opacity:.3;}
+    .gantt-cell:last-child{border-right:none;}
+    .gantt-cell.today-col{background:var(--accent-r);opacity:.08;}
+    .tl-bar{position:absolute;top:4px;height:20px;border-radius:4px;display:flex;align-items:center;overflow:hidden;cursor:pointer;transition:opacity .15s;z-index:10;}
+    .tl-bar:hover{opacity:.85;}
+    .tl-btxt{font-size:10px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px;text-shadow:0 1px 2px rgba(0,0,0,.3);}
+    .tl-today{position:absolute;top:0;bottom:0;width:2px;background:var(--today-line);z-index:20;pointer-events:none;}
+
+    /* ── MODAL ── */
+    .modal-overlay{display:none;position:fixed;inset:0;background:var(--modal-overlay);z-index:900;align-items:center;justify-content:center;}
+    .modal-overlay.open{display:flex;}
+    .modal{background:var(--surface);border-radius:12px;max-width:680px;width:calc(100% - 32px);max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+    .modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;}
+    .modal-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;}
+    .modal-title{font-size:16px;font-weight:800;color:var(--text);line-height:1.3;}
+    .modal-close{margin-left:auto;background:none;border:none;font-size:20px;color:var(--text3);cursor:pointer;line-height:1;padding:2px;flex-shrink:0;}
+    .modal-close:hover{color:var(--text);}
+    .modal-body{padding:16px 20px;overflow-y:auto;flex:1;}
+    .modal-meta{font-size:11px;color:var(--text3);margin-bottom:12px;}
+    .modal-summary{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:12px;padding:10px 12px;background:var(--surface2);border-radius:6px;border-left:3px solid var(--primary);}
+    .modal-body-text{font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap;word-break:break-all;}
+    .modal-link{display:inline-block;margin-top:12px;color:var(--primary);font-size:12px;font-weight:600;text-decoration:underline;}
+
+    /* ── TAGS ── */
+    .nc-tag{font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;white-space:nowrap;}
+    .tag-cat{background:var(--tag-bg);color:var(--tag-color);}
+    .tag-genre{background:#e8f4e8;color:#2d7a2d;}
+    [data-theme="dark"] .tag-genre{background:#1a3020;color:#4ade80;}
+    .tag-src{background:var(--surface2);color:var(--text3);}
+
+    /* ── EMPTY / SKELETON ── */
+    .empty{padding:40px 20px;text-align:center;color:var(--text3);}
+    .empty-icon{font-size:36px;margin-bottom:8px;}
+    .empty-msg{font-size:13px;}
+    .skeleton{background:linear-gradient(90deg,var(--surface2) 25%,var(--border) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;}
+    @keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+    /* ── BAR COLORS ── */
+    .bc0{background:#5c4ee8;} .bc1{background:#e05555;} .bc2{background:#00a878;}
+    .bc3{background:#e8a020;} .bc4{background:#3b82f6;} .bc5{background:#9b59b6;}
+    .bc6{background:#e91e63;} .bc7{background:#009688;}
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="g-header">
+  <div class="logo">GAME<span>PULSE</span></div>
+  <nav class="page-nav">
+    <a href="schedule.html" class="pn-link active">📅 신작 일정</a>
+    <a href="news.html" class="pn-link">📰 뉴스</a>
+  </nav>
+  <div class="h-spacer"></div>
+  <span class="h-stat" id="h-stat">로딩 중...</span>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">🌙 다크</button>
+</header>
+
+<!-- ── KPI BAR ── -->
+<div class="kpi-bar" id="kpi-bar">
+  <div class="kpi-item" id="kpi-launch" onclick="toggleKpi('kpi-launch')">
+    <div class="kpi-label">오늘 출시</div>
+    <div class="kpi-val kv-r" id="kv-launch">—</div>
+    <div class="kpi-panel" id="kp-launch">
+      <div class="kpi-panel-title">오늘 출시 게임</div>
+      <div id="kpl-launch"><div class="kpi-empty">데이터 로딩 중...</div></div>
+    </div>
+  </div>
+  <div class="kpi-item" id="kpi-cbt" onclick="toggleKpi('kpi-cbt')">
+    <div class="kpi-label">진행중 CBT</div>
+    <div class="kpi-val kv-g" id="kv-cbt">—</div>
+    <div class="kpi-panel" id="kp-cbt">
+      <div class="kpi-panel-title">CBT 진행 게임</div>
+      <div id="kpl-cbt"><div class="kpi-empty">데이터 로딩 중...</div></div>
+    </div>
+  </div>
+  <div class="kpi-item" id="kpi-week" onclick="toggleKpi('kpi-week')">
+    <div class="kpi-label">이번주 신작</div>
+    <div class="kpi-val kv-y" id="kv-week">—</div>
+    <div class="kpi-panel" id="kp-week">
+      <div class="kpi-panel-title">이번주 출시 게임</div>
+      <div id="kpl-week"><div class="kpi-empty">데이터 로딩 중...</div></div>
+    </div>
+  </div>
+  <div class="kpi-item" id="kpi-pre" onclick="toggleKpi('kpi-pre')">
+    <div class="kpi-label">사전예약중</div>
+    <div class="kpi-val kv-b" id="kv-pre">—</div>
+    <div class="kpi-panel" id="kp-pre">
+      <div class="kpi-panel-title">사전예약 게임</div>
+      <div id="kpl-pre"><div class="kpi-empty">데이터 로딩 중...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MONTH NAV ── -->
+<div class="month-nav">
+  <button class="month-nav-btn" onclick="shiftMonth(-1)">◀ 이전달</button>
+  <select class="month-select" id="month-select" onchange="onMonthSelect()"></select>
+  <span class="mns"></span>
+  <span class="month-label" id="month-label"></span>
+  <button class="month-nav-btn" onclick="shiftMonth(1)">다음달 ▶</button>
+</div>
+
+<!-- ── FILTER BAR ── -->
+<div class="filter-bar" id="filter-bar">
+  <span class="filter-label">장르</span>
+  <button class="f-chip active" data-genre="전체" onclick="setGenre(this)">전체</button>
+  <button class="f-chip" data-genre="MMORPG" onclick="setGenre(this)">MMORPG</button>
+  <button class="f-chip" data-genre="수집형 RPG" onclick="setGenre(this)">수집형RPG</button>
+  <button class="f-chip" data-genre="방치형" onclick="setGenre(this)">방치형</button>
+  <button class="f-chip" data-genre="전략" onclick="setGenre(this)">전략</button>
+  <button class="f-chip" data-genre="슈팅" onclick="setGenre(this)">슈팅</button>
+  <button class="f-chip" data-genre="RPG" onclick="setGenre(this)">RPG</button>
+  <div class="filter-sep"></div>
+  <span class="filter-label">이벤트</span>
+  <button class="f-chip active" data-etype="전체" onclick="setEtype(this)">전체</button>
+  <button class="f-chip" data-etype="사전예약" onclick="setEtype(this)">사전예약</button>
+  <button class="f-chip" data-etype="CBT" onclick="setEtype(this)">CBT</button>
+  <button class="f-chip" data-etype="OBT" onclick="setEtype(this)">OBT</button>
+  <button class="f-chip" data-etype="출시" onclick="setEtype(this)">출시</button>
+  <button class="f-chip" data-etype="신규서버" onclick="setEtype(this)">신규서버</button>
+</div>
+
+<!-- ── GANTT ── -->
+<div class="gantt-wrap" id="gantt-wrap">
+  <div class="gantt-head" id="gantt-head"></div>
+  <div class="gantt-body" id="gantt-body"></div>
+</div>
+
+<!-- ── MODAL ── -->
+<div class="modal-overlay" id="modal" onclick="closeModalOnBg(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div style="flex:1;min-width:0;">
+        <div class="modal-tags" id="modal-tags"></div>
+        <div class="modal-title" id="modal-title"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-meta" id="modal-meta"></div>
+      <div class="modal-summary" id="modal-summary" style="display:none;"></div>
+      <div class="modal-body-text" id="modal-body"></div>
+      <a class="modal-link" id="modal-link" href="#" target="_blank" rel="noopener">원문 보기 →</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+var DATA_PATH = 'data/';
+var DATES_URL = DATA_PATH + 'dates.json';
+
+// ── STATE ──
+var ALL_ARTICLES = [];
+var DATES_LIST = [];
+var CUR_MONTH = { y: new Date().getFullYear(), m: new Date().getMonth() + 1 };
+var GENRE_FILTER = '전체';
+var ETYPE_FILTER = '전체';
+
+// ── EVENT TYPES ──
+var NEW_ET  = new Set(['사전예약','CBT','OBT','출시','신규서버','얼리액세스','소프트론칭']);
+var SAFE_ET = new Set(['사전예약','CBT','OBT','신규서버','얼리액세스']);
+
+var EXCL_HARD = [
+  '신규 캐릭터','신규캐릭터','캐릭터 출시','캐릭터출시',
+  '콜라보','콜라버레이션','카페 콜라보','반주년','기념 이벤트','기념일',
+  '협업 이벤트','신규 스킨','스킨 출시'
+];
+var EXCL_SOFT = [
+  '업데이트','패치','밸런스','이벤트 시작','이벤트 오픈',
+  '시즌 시작','시즌 오픈','점검','신규 콘텐츠','캐릭터 소개','캐릭터 공개'
+];
+var IND_CATS = new Set(['업계 동향','IR','인사','M&A','규제','인터뷰','채용','기술']);
+
+// ── THEME ──
+function toggleTheme() {
+  var html = document.documentElement;
+  var dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('theme-btn').textContent = dark ? '🌙 다크' : '☀️ 라이트';
+}
+
+// ── UTILS ──
+function cleanT(t) {
+  if (!t) return '';
+  var prev;
+  do { prev = t; t = t.replace(/^[\[\(【《〈][^\]\)】》〉]*[\]\)】》〉]\s*/, ''); } while (t !== prev);
+  return t.trim();
+}
+
+function kst(s) {
+  if (!s) return null;
+  var d;
+  if (s.indexOf('T') > 0)      d = new Date(s);
+  else if (s.indexOf(' ') > 0) d = new Date(s.replace(' ','T') + ':00+09:00');
+  else                          d = new Date(s + 'T00:00:00+09:00');
+  return isNaN(d) ? null : d;
+}
+
+function fmtDate(s) {
+  if (!s) return '';
+  var d = kst(s);
+  if (!d) return s;
+  return (d.getMonth()+1) + '/' + d.getDate();
+}
+
+function today() {
+  var n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+}
+
+function weekRange() {
+  var t = today();
+  var dow = t.getDay();
+  var mon = new Date(t); mon.setDate(t.getDate() - (dow === 0 ? 6 : dow - 1));
+  var sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+  return { mon: mon, sun: sun };
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── FILTERS ──
+function isExcluded(a) {
+  if (SAFE_ET.has(a.event_type || '')) return false;
+  var t = cleanT(a.cleaned_title || a.title || '').toLowerCase();
+  if (EXCL_HARD.some(function(k){ return t.indexOf(k) !== -1; })) return true;
+  if (!NEW_ET.has(a.event_type || '') && EXCL_SOFT.some(function(k){ return t.indexOf(k) !== -1; })) return true;
+  return false;
+}
+
+function isNewRelease(a) {
+  if (IND_CATS.has(a.cat_html || '')) return false;
+  if (isExcluded(a)) return false;
+  return a.is_new_event || NEW_ET.has(a.event_type || '');
+}
+
+function applyFilters(articles) {
+  return articles.filter(function(a) {
+    if (GENRE_FILTER !== '전체' && (a.genre || '') !== GENRE_FILTER) return false;
+    if (ETYPE_FILTER !== '전체' && (a.event_type || '') !== ETYPE_FILTER) return false;
+    return true;
+  });
+}
+
+function setGenre(btn) {
+  document.querySelectorAll('[data-genre]').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  GENRE_FILTER = btn.dataset.genre;
+  render();
+}
+
+function setEtype(btn) {
+  document.querySelectorAll('[data-etype]').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  ETYPE_FILTER = btn.dataset.etype;
+  render();
+}
+
+// ── MONTH NAV ──
+function buildMonthSelect() {
+  var sel = document.getElementById('month-select');
+  sel.innerHTML = '';
+  for (var y = 2024; y <= 2027; y++) {
+    for (var mo = 1; mo <= 12; mo++) {
+      var opt = document.createElement('option');
+      opt.value = y + '-' + mo;
+      opt.textContent = y + '년 ' + mo + '월';
+      if (y === CUR_MONTH.y && mo === CUR_MONTH.m) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  }
+}
+
+function onMonthSelect() {
+  var v = document.getElementById('month-select').value.split('-');
+  CUR_MONTH = { y: parseInt(v[0]), m: parseInt(v[1]) };
+  updateMonthLabel();
+  render();
+}
+
+function shiftMonth(d) {
+  CUR_MONTH.m += d;
+  if (CUR_MONTH.m > 12) { CUR_MONTH.m = 1; CUR_MONTH.y++; }
+  if (CUR_MONTH.m < 1)  { CUR_MONTH.m = 12; CUR_MONTH.y--; }
+  updateMonthLabel();
+  buildMonthSelect();
+  render();
+}
+
+function updateMonthLabel() {
+  document.getElementById('month-label').textContent = CUR_MONTH.y + '년 ' + CUR_MONTH.m + '월';
+}
+
+// ── KPI ──
+function updateKpi(articles) {
+  var t = today();
+  var wr = weekRange();
+  var launch = [], cbtList = [], weekList = [], preList = [];
+
+  articles.filter(isNewRelease).forEach(function(a) {
+    var et = a.event_type || '';
+    var esD = kst(a.event_start || '');
+    var eeD = kst(a.event_end || '');
+    var gn = cleanT(a.cleaned_title || a.title || '');
+
+    if (et === '출시' && esD) {
+      var d = new Date(esD.getFullYear(), esD.getMonth(), esD.getDate());
+      if (d.getTime() === t.getTime()) launch.push({ name: gn, date: fmtDate(a.event_start), badge: '출시' });
+    }
+    if ((et === 'CBT' || et === 'OBT') && esD) {
+      var es = new Date(esD.getFullYear(), esD.getMonth(), esD.getDate());
+      var ee = eeD ? new Date(eeD.getFullYear(), eeD.getMonth(), eeD.getDate()) : es;
+      if (es <= t && t <= ee) cbtList.push({ name: gn, date: fmtDate(a.event_start) + (a.event_end ? '~' + fmtDate(a.event_end) : ''), badge: et });
+    }
+    if ((et === '출시' || et === 'OBT') && esD) {
+      var es2 = new Date(esD.getFullYear(), esD.getMonth(), esD.getDate());
+      if (es2 >= wr.mon && es2 <= wr.sun) weekList.push({ name: gn, date: fmtDate(a.event_start), badge: et });
+    }
+    if (et === '사전예약' && esD) {
+      var es3 = new Date(esD.getFullYear(), esD.getMonth(), esD.getDate());
+      var ee3 = eeD ? new Date(eeD.getFullYear(), eeD.getMonth(), eeD.getDate()) : new Date(9999,0,1);
+      if (es3 <= t && t <= ee3) preList.push({ name: gn, date: fmtDate(a.event_start), badge: '사전예약' });
+    }
+  });
+
+  document.getElementById('kv-launch').textContent = launch.length;
+  document.getElementById('kv-cbt').textContent    = cbtList.length;
+  document.getElementById('kv-week').textContent   = weekList.length;
+  document.getElementById('kv-pre').textContent    = preList.length;
+
+  renderKpiList('kpl-launch', launch);
+  renderKpiList('kpl-cbt',    cbtList);
+  renderKpiList('kpl-week',   weekList);
+  renderKpiList('kpl-pre',    preList);
+}
+
+function renderKpiList(id, list) {
+  var el = document.getElementById(id);
+  if (!list.length) { el.innerHTML = '<div class="kpi-empty">해당 없음</div>'; return; }
+  el.innerHTML = list.map(function(g) {
+    return '<div class="kpi-panel-item"><span class="game-name">' + esc(g.name) + '</span>' +
+      '<span class="game-date">' + esc(g.date) + '</span>' +
+      '<span class="game-badge">' + esc(g.badge) + '</span></div>';
+  }).join('');
+}
+
+function toggleKpi(id) {
+  var items = document.querySelectorAll('.kpi-item');
+  items.forEach(function(el) {
+    if (el.id === id) el.classList.toggle('active');
+    else              el.classList.remove('active');
+  });
+  event.stopPropagation();
+}
+
+document.addEventListener('click', function() {
+  document.querySelectorAll('.kpi-item').forEach(function(el){ el.classList.remove('active'); });
+});
+
+// ── GANTT ──
+var BAR_COLORS = ['bc0','bc1','bc2','bc3','bc4','bc5','bc6','bc7'];
+var colorMap = {}, colorIdx = 0;
+
+function gameColor(name) {
+  if (!colorMap[name]) { colorMap[name] = BAR_COLORS[colorIdx % BAR_COLORS.length]; colorIdx++; }
+  return colorMap[name];
+}
+
+// 이벤트 타입 → 표시 레이블
+var ET_LABEL = {
+  '출시'   : '[출시]',
+  'CBT'    : '[CBT]',
+  'OBT'    : '[OBT]',
+  '사전예약': '[사전예약]',
+  '신규서버': '[서버]',
+  '얼리액세스': '[얼리]',
+  '소프트론칭': '[소프트]'
+};
+
+// 게임명 추출: 따옴표 → 쉼표 뒤 → 이벤트 키워드 제거 → 앞 3단어
+function extractGameName(rawTitle) {
+  if (!rawTitle) return '';
+  var t = cleanT(rawTitle);
+  // 1) 따옴표 안 텍스트 (한/영 single·double)
+  var m = t.match(/[\u2018\u2019\u201c\u201d''"]([^\u2018\u2019\u201c\u201d'"]{2,25})[\u2018\u2019\u201c\u201d'"]/);
+  if (!m) m = t.match(/'([^']{2,20})'/) || t.match(/"([^"]{2,20})"/);
+  if (m) return m[1].trim();
+  // 2) 쉼표 뒤 핵심 명사 추출
+  var ci = Math.max(t.lastIndexOf(','), t.lastIndexOf('\uff0c'));
+  if (ci >= 0) {
+    var after = t.slice(ci + 1).trim()
+      .replace(/\s*(출시|사전예약|CBT|OBT|오픈|시작|런칭|공개|예정|스팀|글로벌|한국|모바일|PC|\d+일|\d+월).*$/i, '')
+      .trim();
+    if (after.length >= 2 && after.length <= 25) return after;
+  }
+  // 3) 이벤트 접미사 제거
+  var stripped = t
+    .replace(/\s+(정식\s*)?(출시|사전예약|CBT|OBT|오픈|시작|런칭|공개|예정|스타트).*$/i, '')
+    .trim();
+  if (stripped && stripped.length >= 2 && stripped.length <= 30) return stripped;
+  // 4) 앞 3단어 fallback
+  return t.split(/\s+/).slice(0, 3).join(' ');
+}
+
+function assignLanes(events, mStart, mEnd, totalDays) {
+  var laneEnds = [];
+  events.forEach(function(ev) {
+    var esD = kst(ev.event_start);
+    var eeD = ev.event_end ? kst(ev.event_end) : esD;
+    if (!esD) { ev._s = 1; ev._e = 1; ev.lane = 0; return; }
+    var s = esD < mStart ? 1 : esD.getDate();
+    var e = eeD > mEnd ? totalDays : eeD.getDate();
+    s = Math.max(1, s); e = Math.min(totalDays, e);
+    ev._s = s; ev._e = e;
+    var placed = false;
+    for (var i = 0; i < laneEnds.length; i++) {
+      if (laneEnds[i] < s) { ev.lane = i; laneEnds[i] = e; placed = true; break; }
+    }
+    if (!placed) { ev.lane = laneEnds.length; laneEnds.push(e); }
+  });
+  return Math.max(1, laneEnds.length);
+}
+
+function getMonthArticles() {
+  var mStart = new Date(CUR_MONTH.y, CUR_MONTH.m - 1, 1);
+  var mEnd   = new Date(CUR_MONTH.y, CUR_MONTH.m, 0);
+  return ALL_ARTICLES.filter(function(a) {
+    var pubD = kst(a.pub_date || a.collected_at || '');
+    var esD  = kst(a.event_start || '');
+    var eeD  = kst(a.event_end || '');
+    if (esD) { var eEnd = eeD || esD; if (esD <= mEnd && eEnd >= mStart) return true; }
+    if (pubD && pubD >= mStart && pubD <= mEnd) return true;
+    return false;
+  });
+}
+
+function buildGantt(articles) {
+  var mStart    = new Date(CUR_MONTH.y, CUR_MONTH.m - 1, 1);
+  var mEnd      = new Date(CUR_MONTH.y, CUR_MONTH.m, 0);
+  var totalDays = mEnd.getDate();
+  var todayD    = today();
+  var todayInMonth = todayD >= mStart && todayD <= mEnd;
+  var todayCol  = todayInMonth ? todayD.getDate() : -1;
+
+  var events = articles.filter(function(a) {
+    if (!isNewRelease(a)) return false;
+    if (!a.event_start) return false;
+    var esD = kst(a.event_start);
+    var eeD = a.event_end ? kst(a.event_end) : esD;
+    if (!esD) return false;
+    return esD <= mEnd && eeD >= mStart;
+  });
+  events = applyFilters(events);
+
+  var nLanes = assignLanes(events, mStart, mEnd, totalDays);
+
+  // HEAD
+  var headEl = document.getElementById('gantt-head');
+  headEl.style.gridTemplateColumns = 'repeat(' + totalDays + ', 1fr)';
+  headEl.innerHTML = '';
+  for (var d = 1; d <= totalDays; d++) {
+    var div = document.createElement('div');
+    div.className = 'gantt-day' + (d === todayCol ? ' today-col' : '');
+    div.textContent = d;
+    headEl.appendChild(div);
+  }
+
+  // BODY
+  var bodyEl = document.getElementById('gantt-body');
+  bodyEl.innerHTML = '';
+  bodyEl.style.position = 'relative';
+
+  for (var lane = 0; lane < nLanes; lane++) {
+    var laneEl = document.createElement('div');
+    laneEl.className = 'gantt-lane';
+    laneEl.style.gridTemplateColumns = 'repeat(' + totalDays + ', 1fr)';
+    for (var d2 = 1; d2 <= totalDays; d2++) {
+      var cell = document.createElement('div');
+      cell.className = 'gantt-cell' + (d2 === todayCol ? ' today-col' : '');
+      laneEl.appendChild(cell);
+    }
+    bodyEl.appendChild(laneEl);
+  }
+
+  if (todayCol > 0) {
+    var todayLine = document.createElement('div');
+    todayLine.className = 'tl-today';
+    todayLine.style.left = ((todayCol - 0.5) / totalDays * 100).toFixed(2) + '%';
+    bodyEl.appendChild(todayLine);
+  }
+
+  // 바 렌더 — 게임명 중심 표시
+  var laneH = 28;
+  events.forEach(function(ev) {
+    if (ev._s === undefined) return;
+    var leftPct  = ((ev._s - 1) / totalDays * 100).toFixed(3);
+    var widthPct = ((ev._e - ev._s + 1) / totalDays * 100).toFixed(3);
+    var topPx    = ev.lane * laneH + 4;
+    var gn       = cleanT(ev.cleaned_title || ev.title || '');
+    var gameName = extractGameName(gn);
+    var etLabel  = ET_LABEL[ev.event_type || ''] || (ev.event_type ? '[' + ev.event_type + ']' : '');
+    var label    = etLabel ? etLabel + ' ' + gameName : gameName;
+
+    var bar = document.createElement('div');
+    bar.className = 'tl-bar ' + gameColor(gn);
+    bar.style.left  = leftPct + '%';
+    bar.style.width = 'calc(' + widthPct + '% - 2px)';
+    bar.style.top   = topPx + 'px';
+    bar.innerHTML   = '<span class="tl-btxt">' + esc(label) + '</span>';
+    (function(article){ bar.addEventListener('click', function(){ openModal(article); }); })(ev);
+    bodyEl.appendChild(bar);
+  });
+
+  bodyEl.style.height = (nLanes * laneH) + 'px';
+
+  if (!events.length) {
+    bodyEl.innerHTML = '<div class="empty" style="height:60px;"><div class="empty-msg">이번 달 해당 이벤트 없음</div></div>';
+  }
+}
+
+// ── ARTICLE STORE ──
+var _articleStore = [];
+function storeArticle(a) { _articleStore.push(a); return _articleStore.length - 1; }
+function resetStore()     { _articleStore = []; }
+
+// ── MODAL ──
+function openModalByIdx(idx) { openModal(_articleStore[idx]); }
+
+function openModal(a) {
+  if (!a) return;
+  var title  = cleanT(a.cleaned_title || a.title || '');
+  var cat    = a.cat_html || '';
+  var et     = a.event_type || '';
+  var genre  = a.genre || '';
+  var src    = a.source_name || '';
+  var summary = a.summary || '';
+  var body   = a.body_text || '';
+  var link   = a.link || a.url || '';
+  var dateStr = a.event_start
+    ? fmtDate(a.event_start) + (a.event_end ? ' ~ ' + fmtDate(a.event_end) : '')
+    : fmtDate(a.pub_date || a.collected_at || '');
+
+  document.getElementById('modal-tags').innerHTML =
+    (cat   ? '<span class="nc-tag tag-cat">' + esc(cat) + '</span>' : '') +
+    (et    ? '<span class="nc-tag tag-cat" style="background:var(--primary-soft);color:var(--primary);">' + esc(et) + '</span>' : '') +
+    (genre ? '<span class="nc-tag tag-genre">' + esc(genre) + '</span>' : '') +
+    (src   ? '<span class="nc-tag tag-src">' + esc(src) + '</span>' : '');
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-meta').textContent  = dateStr;
+
+  var summEl = document.getElementById('modal-summary');
+  if (summary) { summEl.textContent = summary; summEl.style.display = ''; }
+  else          { summEl.style.display = 'none'; }
+  document.getElementById('modal-body').textContent = body || (summary ? '' : '본문 없음');
+
+  var linkEl = document.getElementById('modal-link');
+  if (link) { linkEl.href = link; linkEl.style.display = ''; }
+  else        { linkEl.style.display = 'none'; }
+
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeModalOnBg(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+
+// ── RENDER ──
+function render() {
+  var mArticles = getMonthArticles();
+  updateKpi(ALL_ARTICLES);
+  resetStore();
+  buildGantt(mArticles);
+  document.getElementById('h-stat').innerHTML =
+    '<b>' + mArticles.length + '</b>건 / ' +
+    CUR_MONTH.y + '.' + String(CUR_MONTH.m).padStart(2,'0');
+}
+
+// ── DATA LOAD ──
+async function loadDates() {
+  try {
+    var r = await fetch(DATES_URL + '?v=' + Date.now());
+    if (!r.ok) throw new Error('dates.json not found');
+    var data = await r.json();
+    DATES_LIST = data.dates || data || [];
+    if (!DATES_LIST.length) throw new Error('empty');
+    return DATES_LIST;
+  } catch(e) { console.warn('dates.json load failed:', e); return []; }
+}
+
+async function loadAllData() {
+  var dates = await loadDates();
+  if (!dates.length) return;
+  var recent = dates.slice(-90);
+  var results = await Promise.allSettled(recent.map(function(dateStr) {
+    return fetch(DATA_PATH + dateStr + '.json?v=' + Date.now()).then(function(r){ return r.json(); });
+  }));
+  var seen = new Set();
+  ALL_ARTICLES = [];
+  results.forEach(function(r) {
+    if (r.status !== 'fulfilled') return;
+    var arr = Array.isArray(r.value) ? r.value : (r.value.articles || []);
+    arr.forEach(function(a) {
+      var key = a.link || a.url || a.title;
+      if (key && !seen.has(key)) { seen.add(key); ALL_ARTICLES.push(a); }
+    });
+  });
+  ALL_ARTICLES.sort(function(a, b) {
+    return new Date(b.pub_date || b.collected_at || 0) - new Date(a.pub_date || a.collected_at || 0);
+  });
+  render();
+}
+
+// ── INIT ──
+buildMonthSelect();
+updateMonthLabel();
+loadAllData();
+</script>
+</body>
+</html>
