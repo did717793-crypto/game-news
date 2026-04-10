@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GAME PULSE</title>
-  <meta http-equiv="refresh" content="0; url=new-articles.html">
+  <title>GAME PULSE — PM 대시보드</title>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
@@ -80,11 +79,6 @@
     .h-stat b{color:var(--primary);}
     .theme-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;}
     .theme-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
-    /* ── PAGE NAV ── */
-    .page-nav{display:flex;gap:2px;background:var(--surface2);border-radius:8px;padding:3px;}
-    .pn-link{padding:4px 14px;font-size:12px;font-weight:700;color:var(--text3);border-radius:6px;transition:all .15s;white-space:nowrap;}
-    .pn-link:hover{color:var(--primary);}
-    .pn-link.active{background:var(--primary);color:#fff;}
 
     /* ── KPI BAR ── */
     .kpi-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:0;position:sticky;top:52px;z-index:290;overflow-x:auto;}
@@ -113,18 +107,6 @@
     .month-nav{background:var(--surface2);border-bottom:1px solid var(--border);padding:6px 20px;display:flex;align-items:center;gap:8px;position:sticky;top:102px;z-index:280;}
     .month-nav-btn{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s;}
     .month-nav-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
-    /* ── DATE RANGE BAR ── */
-    .dr-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:7px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:132px;z-index:278;}
-    .dr-quick{display:flex;gap:4px;flex-wrap:wrap;align-items:center;}
-    .dr-btn{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 10px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s;}
-    .dr-btn:hover{border-color:var(--primary);color:var(--primary);}
-    .dr-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
-    .dr-sep{width:1px;height:18px;background:var(--border);margin:0 4px;}
-    .dr-custom{display:flex;align-items:center;gap:6px;}
-    .dr-custom input[type=date]{border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:12px;background:var(--surface);color:var(--text1);outline:none;}
-    .dr-custom input[type=date]:focus{border-color:var(--primary);}
-    .dr-go{background:var(--primary);color:#fff;border:none;border-radius:5px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;}
-    .dr-go:hover{opacity:.88;}
     .month-select{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:12px;font-weight:700;color:var(--text);outline:none;cursor:pointer;}
     .month-select:focus{border-color:var(--primary);}
     .month-label{font-size:13px;font-weight:800;color:var(--primary);}
@@ -228,10 +210,6 @@
 <!-- ── HEADER ── -->
 <header class="g-header">
   <div class="logo">GAME<span>PULSE</span></div>
-  <nav class="page-nav">
-    <a href="schedule.html" class="pn-link">📅 신작 일정</a>
-    <a href="news.html" class="pn-link">📰 뉴스</a>
-  </nav>
   <div class="h-spacer"></div>
   <span class="h-stat" id="h-stat">로딩 중...</span>
   <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">🌙 다크</button>
@@ -280,26 +258,6 @@
   <span class="mns"></span>
   <span class="month-label" id="month-label"></span>
   <button class="month-nav-btn" onclick="shiftMonth(1)">다음달 ▶</button>
-</div>
-
-<!-- ── DATE RANGE BAR ── -->
-<div class="dr-bar" id="dr-bar">
-  <div class="dr-quick">
-    <button class="dr-btn" data-range="today"    onclick="setQuickRange(this)">오늘</button>
-    <button class="dr-btn active" data-range="yesterday" onclick="setQuickRange(this)">어제</button>
-    <button class="dr-btn" data-range="thisweek" onclick="setQuickRange(this)">이번주</button>
-    <button class="dr-btn" data-range="7days"    onclick="setQuickRange(this)">최근7일</button>
-    <button class="dr-btn" data-range="thismonth"onclick="setQuickRange(this)">이번달</button>
-    <button class="dr-btn" data-range="30days"   onclick="setQuickRange(this)">최근30일</button>
-    <button class="dr-btn" data-range="all"      onclick="setQuickRange(this)">전체</button>
-  </div>
-  <div class="dr-sep"></div>
-  <div class="dr-custom">
-    <input type="date" id="dr-start">
-    <span style="color:var(--text3);font-size:13px">~</span>
-    <input type="date" id="dr-end">
-    <button class="dr-go" onclick="applyDateRange()">조회</button>
-  </div>
 </div>
 
 <!-- ── MAIN TABS ── -->
@@ -377,8 +335,6 @@ var CUR_MONTH = { y: new Date().getFullYear(), m: new Date().getMonth() + 1 };
 var GENRE_FILTER = '전체';
 var ETYPE_FILTER = '전체';
 var ACTIVE_TAB = 'new-release';
-var RANGE_START = null;   // Date (자정 기준) | null = 제한 없음
-var RANGE_END   = null;   // Date (자정 기준) | null = 제한 없음
 
 // ── NEW GAME EVENT TYPES (출시·CBT 계열) ──────────────────────────────────
 var NEW_ET = new Set(['사전예약','CBT','OBT','출시','신규서버','얼리액세스','소프트론칭']);
@@ -420,63 +376,8 @@ function cleanT(t) {
 // ── UTILS ───────────────────────────────────────────────────────────────────
 function kst(s) {
   if (!s) return null;
-  var d;
-  if (s.indexOf('T') > 0)      d = new Date(s);
-  else if (s.indexOf(' ') > 0) d = new Date(s.replace(' ','T') + ':00+09:00');
-  else                          d = new Date(s + 'T00:00:00+09:00');
+  var d = new Date(s.indexOf('T') > 0 ? s : s + 'T00:00:00+09:00');
   return isNaN(d) ? null : d;
-}
-
-// ── DATE RANGE UTIL ──────────────────────────────────────────────────────────
-function today0() {
-  var n = new Date();
-  return new Date(n.getFullYear(), n.getMonth(), n.getDate());
-}
-function isoDate(d) {
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-}
-function parseIso(s) {
-  if (!s) return null;
-  var p = s.split('-');
-  return new Date(+p[0], +p[1]-1, +p[2]);
-}
-function articleDate(a) {
-  var s = a.pub_date || a.collected_at || '';
-  var d = kst(s);
-  if (!d) return null;
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate()); // 자정 로컬
-}
-function inRange(a) {
-  if (!RANGE_START && !RANGE_END) return true;
-  var d = articleDate(a);
-  if (!d) return false;
-  var s = RANGE_START || new Date(0);
-  var e = RANGE_END   || new Date(9999, 0, 1);
-  return d >= s && d <= e;
-}
-function setQuickRange(btn) {
-  var key = btn.dataset.range;
-  var t = today0(), s, e;
-  if      (key === 'today')     { s = e = t; }
-  else if (key === 'yesterday') { s = e = new Date(t.getFullYear(), t.getMonth(), t.getDate()-1); }
-  else if (key === 'thisweek')  { var dow=t.getDay(); s=new Date(t.getFullYear(),t.getMonth(),t.getDate()-(dow===0?6:dow-1)); e=t; }
-  else if (key === '7days')     { s = new Date(t.getFullYear(), t.getMonth(), t.getDate()-6); e = t; }
-  else if (key === 'thismonth') { s = new Date(t.getFullYear(), t.getMonth(), 1); e = t; }
-  else if (key === '30days')    { s = new Date(t.getFullYear(), t.getMonth(), t.getDate()-29); e = t; }
-  else                          { s = null; e = null; } // 전체
-  RANGE_START = s;
-  RANGE_END   = e;
-  document.getElementById('dr-start').value = s ? isoDate(s) : '';
-  document.getElementById('dr-end').value   = e ? isoDate(e) : '';
-  document.querySelectorAll('.dr-btn').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-  render();
-}
-function applyDateRange() {
-  RANGE_START = parseIso(document.getElementById('dr-start').value);
-  RANGE_END   = parseIso(document.getElementById('dr-end').value);
-  document.querySelectorAll('.dr-btn').forEach(function(b){ b.classList.remove('active'); });
-  render();
 }
 
 function fmtDate(s) {
@@ -680,42 +581,6 @@ function gameColor(name) {
   return colorMap[name];
 }
 
-// 이벤트 타입 → 표시 레이블
-var ET_LABEL = {
-  '출시'   : '[출시]',
-  'CBT'    : '[CBT]',
-  'OBT'    : '[OBT]',
-  '사전예약': '[사전예약]',
-  '신규서버': '[서버]',
-  '얼리액세스': '[얼리]',
-  '소프트론칭': '[소프트]'
-};
-
-// 게임명 추출: 따옴표 → 쉼표 뒤 → 이벤트 키워드 제거 → 앞 3단어
-function extractGameName(rawTitle) {
-  if (!rawTitle) return '';
-  var t = cleanT(rawTitle);
-  // 1) 따옴표 안 텍스트
-  var m = t.match(/[\u2018\u2019\u201c\u201d''"]([^\u2018\u2019\u201c\u201d'"]{2,25})[\u2018\u2019\u201c\u201d'"]/);
-  if (!m) m = t.match(/'([^']{2,20})'/) || t.match(/"([^"]{2,20})"/);
-  if (m) return m[1].trim();
-  // 2) 쉼표 뒤 핵심 명사
-  var ci = Math.max(t.lastIndexOf(','), t.lastIndexOf('\uff0c'));
-  if (ci >= 0) {
-    var after = t.slice(ci + 1).trim()
-      .replace(/\s*(출시|사전예약|CBT|OBT|오픈|시작|런칭|공개|예정|스팀|글로벌|한국|모바일|PC|\d+일|\d+월).*$/i, '')
-      .trim();
-    if (after.length >= 2 && after.length <= 25) return after;
-  }
-  // 3) 이벤트 접미사 제거
-  var stripped = t
-    .replace(/\s+(정식\s*)?(출시|사전예약|CBT|OBT|오픈|시작|런칭|공개|예정|스타트).*$/i, '')
-    .trim();
-  if (stripped && stripped.length >= 2 && stripped.length <= 30) return stripped;
-  // 4) 앞 3단어 fallback
-  return t.split(/\s+/).slice(0, 3).join(' ');
-}
-
 function assignLanes(events, mStart, mEnd, totalDays) {
   var laneEnds = [];
   events.forEach(function(ev) {
@@ -803,10 +668,8 @@ function buildGantt(articles) {
     var leftPct = ((ev._s - 1) / totalDays * 100).toFixed(3);
     var widthPct = ((ev._e - ev._s + 1) / totalDays * 100).toFixed(3);
     var topPx = ev.lane * laneH + 4;
-    var gn       = cleanT(ev.cleaned_title || ev.title || '');
-    var gameName = extractGameName(gn);
-    var etLabel  = ET_LABEL[ev.event_type || ''] || (ev.event_type ? '[' + ev.event_type + ']' : '');
-    var label    = etLabel ? etLabel + ' ' + gameName : gameName;
+    var gn = cleanT(ev.cleaned_title || ev.title || '');
+    var label = (ev.event_type ? '[' + ev.event_type + '] ' : '') + gn;
     var bar = document.createElement('div');
     bar.className = 'tl-bar ' + gameColor(gn);
     bar.style.left = leftPct + '%';
@@ -844,14 +707,13 @@ function resetStore() { _articleStore = []; }
 
 // ── RENDER ───────────────────────────────────────────────────────────────────
 function render() {
-  var mArticles = getMonthArticles();          // Gantt용 (월 기준 유지)
-  var ranged    = ALL_ARTICLES.filter(inRange); // 뉴스 리스트용 (기간 기준)
+  var mArticles = getMonthArticles();
 
   // KPI: 전체 기사 기준
   updateKpi(ALL_ARTICLES);
 
   // 신작 소식
-  var nrAll = ranged.filter(isNewRelease);
+  var nrAll = mArticles.filter(isNewRelease);
   var nrFiltered = applyFilters(nrAll);
 
   resetStore();
@@ -859,7 +721,7 @@ function render() {
   renderNewsList(nrFiltered);
 
   // 업계 뉴스
-  var indAll = ranged.filter(isIndustry);
+  var indAll = mArticles.filter(isIndustry);
   renderIndustryList(indAll);
 
   // 헤더 stat
@@ -1060,19 +922,6 @@ async function loadAllData() {
 // ── INIT ─────────────────────────────────────────────────────────────────────
 buildMonthSelect();
 updateMonthLabel();
-
-// 기본값: 어제
-(function(){
-  var t    = today0();
-  var yest = new Date(t.getFullYear(), t.getMonth(), t.getDate() - 1);
-  RANGE_START = yest;
-  RANGE_END   = yest;
-  var el_s = document.getElementById('dr-start');
-  var el_e = document.getElementById('dr-end');
-  if(el_s) el_s.value = isoDate(yest);
-  if(el_e) el_e.value = isoDate(yest);
-})();
-
 loadAllData();
 </script>
 </body>
