@@ -107,6 +107,18 @@
     .month-nav{background:var(--surface2);border-bottom:1px solid var(--border);padding:6px 20px;display:flex;align-items:center;gap:8px;position:sticky;top:102px;z-index:280;}
     .month-nav-btn{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s;}
     .month-nav-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+    /* ── DATE RANGE BAR ── */
+    .dr-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:7px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:132px;z-index:278;}
+    .dr-quick{display:flex;gap:4px;flex-wrap:wrap;align-items:center;}
+    .dr-btn{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 10px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s;}
+    .dr-btn:hover{border-color:var(--primary);color:var(--primary);}
+    .dr-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+    .dr-sep{width:1px;height:18px;background:var(--border);margin:0 4px;}
+    .dr-custom{display:flex;align-items:center;gap:6px;}
+    .dr-custom input[type=date]{border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:12px;background:var(--surface);color:var(--text1);outline:none;}
+    .dr-custom input[type=date]:focus{border-color:var(--primary);}
+    .dr-go{background:var(--primary);color:#fff;border:none;border-radius:5px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;}
+    .dr-go:hover{opacity:.88;}
     .month-select{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:12px;font-weight:700;color:var(--text);outline:none;cursor:pointer;}
     .month-select:focus{border-color:var(--primary);}
     .month-label{font-size:13px;font-weight:800;color:var(--primary);}
@@ -260,6 +272,26 @@
   <button class="month-nav-btn" onclick="shiftMonth(1)">다음달 ▶</button>
 </div>
 
+<!-- ── DATE RANGE BAR ── -->
+<div class="dr-bar" id="dr-bar">
+  <div class="dr-quick">
+    <button class="dr-btn" data-range="today"    onclick="setQuickRange(this)">오늘</button>
+    <button class="dr-btn active" data-range="yesterday" onclick="setQuickRange(this)">어제</button>
+    <button class="dr-btn" data-range="thisweek" onclick="setQuickRange(this)">이번주</button>
+    <button class="dr-btn" data-range="7days"    onclick="setQuickRange(this)">최근7일</button>
+    <button class="dr-btn" data-range="thismonth"onclick="setQuickRange(this)">이번달</button>
+    <button class="dr-btn" data-range="30days"   onclick="setQuickRange(this)">최근30일</button>
+    <button class="dr-btn" data-range="all"      onclick="setQuickRange(this)">전체</button>
+  </div>
+  <div class="dr-sep"></div>
+  <div class="dr-custom">
+    <input type="date" id="dr-start">
+    <span style="color:var(--text3);font-size:13px">~</span>
+    <input type="date" id="dr-end">
+    <button class="dr-go" onclick="applyDateRange()">조회</button>
+  </div>
+</div>
+
 <!-- ── MAIN TABS ── -->
 <nav class="tab-nav">
   <button class="tab-btn active" onclick="switchTab('new-release')">🎮 신작 소식</button>
@@ -335,6 +367,8 @@ var CUR_MONTH = { y: new Date().getFullYear(), m: new Date().getMonth() + 1 };
 var GENRE_FILTER = '전체';
 var ETYPE_FILTER = '전체';
 var ACTIVE_TAB = 'new-release';
+var RANGE_START = null;   // Date (자정 기준) | null = 제한 없음
+var RANGE_END   = null;   // Date (자정 기준) | null = 제한 없음
 
 // ── NEW GAME EVENT TYPES (출시·CBT 계열) ──────────────────────────────────
 var NEW_ET = new Set(['사전예약','CBT','OBT','출시','신규서버','얼리액세스','소프트론칭']);
@@ -376,8 +410,63 @@ function cleanT(t) {
 // ── UTILS ───────────────────────────────────────────────────────────────────
 function kst(s) {
   if (!s) return null;
-  var d = new Date(s.indexOf('T') > 0 ? s : s + 'T00:00:00+09:00');
+  var d;
+  if (s.indexOf('T') > 0)      d = new Date(s);
+  else if (s.indexOf(' ') > 0) d = new Date(s.replace(' ','T') + ':00+09:00');
+  else                          d = new Date(s + 'T00:00:00+09:00');
   return isNaN(d) ? null : d;
+}
+
+// ── DATE RANGE UTIL ──────────────────────────────────────────────────────────
+function today0() {
+  var n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+}
+function isoDate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function parseIso(s) {
+  if (!s) return null;
+  var p = s.split('-');
+  return new Date(+p[0], +p[1]-1, +p[2]);
+}
+function articleDate(a) {
+  var s = a.pub_date || a.collected_at || '';
+  var d = kst(s);
+  if (!d) return null;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()); // 자정 로컬
+}
+function inRange(a) {
+  if (!RANGE_START && !RANGE_END) return true;
+  var d = articleDate(a);
+  if (!d) return false;
+  var s = RANGE_START || new Date(0);
+  var e = RANGE_END   || new Date(9999, 0, 1);
+  return d >= s && d <= e;
+}
+function setQuickRange(btn) {
+  var key = btn.dataset.range;
+  var t = today0(), s, e;
+  if      (key === 'today')     { s = e = t; }
+  else if (key === 'yesterday') { s = e = new Date(t.getFullYear(), t.getMonth(), t.getDate()-1); }
+  else if (key === 'thisweek')  { var dow=t.getDay(); s=new Date(t.getFullYear(),t.getMonth(),t.getDate()-(dow===0?6:dow-1)); e=t; }
+  else if (key === '7days')     { s = new Date(t.getFullYear(), t.getMonth(), t.getDate()-6); e = t; }
+  else if (key === 'thismonth') { s = new Date(t.getFullYear(), t.getMonth(), 1); e = t; }
+  else if (key === '30days')    { s = new Date(t.getFullYear(), t.getMonth(), t.getDate()-29); e = t; }
+  else                          { s = null; e = null; } // 전체
+  RANGE_START = s;
+  RANGE_END   = e;
+  document.getElementById('dr-start').value = s ? isoDate(s) : '';
+  document.getElementById('dr-end').value   = e ? isoDate(e) : '';
+  document.querySelectorAll('.dr-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  render();
+}
+function applyDateRange() {
+  RANGE_START = parseIso(document.getElementById('dr-start').value);
+  RANGE_END   = parseIso(document.getElementById('dr-end').value);
+  document.querySelectorAll('.dr-btn').forEach(function(b){ b.classList.remove('active'); });
+  render();
 }
 
 function fmtDate(s) {
@@ -707,13 +796,14 @@ function resetStore() { _articleStore = []; }
 
 // ── RENDER ───────────────────────────────────────────────────────────────────
 function render() {
-  var mArticles = getMonthArticles();
+  var mArticles = getMonthArticles();          // Gantt용 (월 기준 유지)
+  var ranged    = ALL_ARTICLES.filter(inRange); // 뉴스 리스트용 (기간 기준)
 
   // KPI: 전체 기사 기준
   updateKpi(ALL_ARTICLES);
 
   // 신작 소식
-  var nrAll = mArticles.filter(isNewRelease);
+  var nrAll = ranged.filter(isNewRelease);
   var nrFiltered = applyFilters(nrAll);
 
   resetStore();
@@ -721,7 +811,7 @@ function render() {
   renderNewsList(nrFiltered);
 
   // 업계 뉴스
-  var indAll = mArticles.filter(isIndustry);
+  var indAll = ranged.filter(isIndustry);
   renderIndustryList(indAll);
 
   // 헤더 stat
@@ -922,6 +1012,19 @@ async function loadAllData() {
 // ── INIT ─────────────────────────────────────────────────────────────────────
 buildMonthSelect();
 updateMonthLabel();
+
+// 기본값: 어제
+(function(){
+  var t    = today0();
+  var yest = new Date(t.getFullYear(), t.getMonth(), t.getDate() - 1);
+  RANGE_START = yest;
+  RANGE_END   = yest;
+  var el_s = document.getElementById('dr-start');
+  var el_e = document.getElementById('dr-end');
+  if(el_s) el_s.value = isoDate(yest);
+  if(el_e) el_e.value = isoDate(yest);
+})();
+
 loadAllData();
 </script>
 </body>
