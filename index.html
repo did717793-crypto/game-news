@@ -168,15 +168,29 @@
     .et-얼리액세스{background:#636e72;} .et-소프트론칭{background:#e91e63;}
     .et-default{background:#8889a0;}
 
+    /* ── 주요 뱃지 ── */
+    .badge-major{display:inline-block;font-size:9px;font-weight:900;background:#e05555;color:#fff;border-radius:3px;padding:1px 5px;margin-right:4px;vertical-align:middle;letter-spacing:.3px;}
+    .hero-card.hero-major{border-left-color:#e05555;}
+    .feat-card.feat-major{border-top:2px solid #e05555;}
+    .list-card.list-major .lc-title{color:var(--accent-r);}
+
     /* ── TAB-3: 업계 뉴스 ── */
     .ind-filter{background:var(--surface);border-bottom:1px solid var(--border);padding:7px 20px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
     .industry-list{padding:12px 20px;display:flex;flex-direction:column;gap:6px;}
-    .ind-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;cursor:pointer;transition:all .15s;}
+    .ind-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid transparent;border-radius:6px;padding:10px 14px;cursor:pointer;transition:all .15s;}
     .ind-card:hover{border-color:var(--primary);}
     .ind-header{display:flex;align-items:baseline;gap:8px;margin-bottom:3px;}
     .ind-cat{font-size:10px;font-weight:700;color:var(--tag-color);background:var(--tag-bg);padding:1px 6px;border-radius:10px;white-space:nowrap;}
     .ind-title{font-size:13px;font-weight:600;color:var(--text);flex:1;}
     .ind-meta{font-size:11px;color:var(--text3);}
+    /* 업계 뉴스 카테고리별 색상 */
+    .ind-card.ic-trend{border-left-color:#5c4ee8;}
+    .ind-card.ic-hr   {border-left-color:#00a878;}
+    .ind-card.ic-ma   {border-left-color:#e8a020;}
+    .ind-card.ic-ir   {border-left-color:#3b82f6;}
+    .ind-card.ic-reg  {border-left-color:#e05555;}
+    .ind-card.ic-tech {border-left-color:#9b59b6;}
+    .ind-card.ic-etc  {border-left-color:#8889a0;}
 
     /* ── MODAL ── */
     .modal-overlay{display:none;position:fixed;inset:0;background:var(--modal-overlay);z-index:900;align-items:center;justify-content:center;}
@@ -798,15 +812,14 @@ function renderHero(articles) {
   hdEl.style.display = '';
   document.getElementById('hero-count').textContent = articles.length + '건';
   secEl.innerHTML = articles.map(function(a) {
-    var title   = cleanT(a.cleaned_title || a.title || '');
-    var summary = a.summary || '';
+    var title   = truncTitle28(cleanT(a.cleaned_title || a.title || ''));
     var dateStr = fmtDate(a.event_start || a.pub_date || a.collected_at || '');
+    var major   = isMajor(a);
     var idx     = storeArticle(a);
-    return '<div class="hero-card" onclick="openModalByIdx(' + idx + ')">' +
+    return '<div class="hero-card' + (major ? ' hero-major' : '') + '" onclick="openModalByIdx(' + idx + ')">' +
       '<div class="hero-left">' +
-        '<div class="hero-tags">' + makeTags(a.cat_html||'', a.event_type||'', a.genre||'', a.source_name||'', a.is_new_event) + '</div>' +
+        '<div class="hero-tags">' + (major ? '<span class="badge-major">주요</span>' : '') + makeTags(a.cat_html||'', a.event_type||'', a.genre||'', a.source_name||'', a.is_new_event) + '</div>' +
         '<div class="hero-title">' + esc(title) + '</div>' +
-        (summary ? '<div class="hero-summary">' + esc(summary) + '</div>' : '') +
         '<div class="hero-meta">' + esc(dateStr) + '</div>' +
       '</div></div>';
   }).join('');
@@ -819,14 +832,13 @@ function renderFeatured(articles) {
   hdEl.style.display = '';
   document.getElementById('feat-count').textContent = articles.length + '건';
   gridEl.innerHTML = articles.map(function(a) {
-    var title   = cleanT(a.cleaned_title || a.title || '');
-    var summary = a.summary || '';
+    var title   = truncTitle28(cleanT(a.cleaned_title || a.title || ''));
     var dateStr = fmtDate(a.event_start || a.pub_date || a.collected_at || '');
+    var major   = isMajor(a);
     var idx     = storeArticle(a);
-    return '<div class="feat-card" onclick="openModalByIdx(' + idx + ')">' +
-      '<div class="feat-tags">' + makeTags(a.cat_html||'', a.event_type||'', a.genre||'', a.source_name||'', false) + '</div>' +
+    return '<div class="feat-card' + (major ? ' feat-major' : '') + '" onclick="openModalByIdx(' + idx + ')">' +
+      '<div class="feat-tags">' + (major ? '<span class="badge-major">주요</span>' : '') + makeTags(a.cat_html||'', a.event_type||'', a.genre||'', a.source_name||'', false) + '</div>' +
       '<div class="feat-title">' + esc(title) + '</div>' +
-      (summary ? '<div class="feat-summary">' + esc(summary) + '</div>' : '') +
       '<div class="feat-meta">' + esc(dateStr) + '</div>' +
     '</div>';
   }).join('');
@@ -839,12 +851,13 @@ function renderArticleList(articles) {
   hdEl.style.display = '';
   document.getElementById('list-count').textContent = articles.length + '건';
   secEl.innerHTML = articles.map(function(a) {
-    var title   = cleanT(a.cleaned_title || a.title || '');
+    var title   = truncTitle28(cleanT(a.cleaned_title || a.title || ''));
     var dateStr = fmtDate(a.pub_date || a.collected_at || '');
+    var major   = isMajor(a);
     var idx     = storeArticle(a);
-    return '<div class="list-card" onclick="openModalByIdx(' + idx + ')">' +
+    return '<div class="list-card' + (major ? ' list-major' : '') + '" onclick="openModalByIdx(' + idx + ')">' +
       '<div class="lc-left">' +
-        '<div class="lc-tags">' + makeTags(a.cat_html||'', a.event_type||'', a.genre||'', a.source_name||'', false) + '</div>' +
+        '<div class="lc-tags">' + (major ? '<span class="badge-major">주요</span>' : '') + makeTags(a.cat_html||'', a.event_type||'', a.genre||'', a.source_name||'', false) + '</div>' +
         '<div class="lc-title">' + esc(title) + '</div>' +
       '</div>' +
       '<div class="lc-right">' + esc(dateStr) + '</div>' +
@@ -869,6 +882,43 @@ function truncTitle(t, maxLen) {
   return t;
 }
 
+// 신작 기사 제목 28자 제한
+function truncTitle28(t) {
+  if (!t) return '';
+  if (t.length > 28) return t.slice(0, 27) + '…';
+  return t;
+}
+
+// 주요 기사 판별: 출시·얼리액세스 event_type 또는 주요 IP 키워드
+var MAJOR_ET = new Set(['출시','얼리액세스']);
+var MAJOR_KW = ['메이플','리니지','던파','오버워치','배틀그라운드','로스트아크','넥슨','엔씨소프트','크래프톤','블리자드'];
+function isMajor(a) {
+  if (MAJOR_ET.has(a.event_type || '')) return true;
+  var t = (a.cleaned_title || a.title || '').toLowerCase();
+  return MAJOR_KW.some(function(k){ return t.indexOf(k) !== -1; });
+}
+
+// 신작 일정 연기/취소/중단 제외
+var SCHED_EXCL_KW = ['연기','취소','중단'];
+function isSchedExcluded(a) {
+  var t = (a.cleaned_title || a.title || '');
+  return SCHED_EXCL_KW.some(function(k){ return t.indexOf(k) !== -1; });
+}
+
+// 업계 뉴스 카테고리 그룹 (정렬 순서: 업계동향→인사→M&A→IR→규제→기술→기타)
+var IND_CAT_GROUP = {
+  '업계 동향':0,'시장':0,'통계':0,'행사':0,'전시':0,
+  '인사':1,'채용':1,
+  'M&A':2,'파트너십':2,
+  'IR':3,'실적':3,'투자':3,
+  '규제':4,'법률':4,'지재권':4,
+  '기술':5
+};
+var IND_CAT_CLASS = ['ic-trend','ic-hr','ic-ma','ic-ir','ic-reg','ic-tech','ic-etc'];
+function getIndGroup(cat) {
+  return (cat in IND_CAT_GROUP) ? IND_CAT_GROUP[cat] : 6;
+}
+
 function renderCalendar(articles) {
   var wrap = document.getElementById('cal-wrap');
   if (!wrap) return;
@@ -880,8 +930,8 @@ function renderCalendar(articles) {
   var startDow  = firstDay.getDay(); // 0=일
   var todayD    = today0();
 
-  // 일정 아이템 필터링 (isScheduleItem + ETYPE_FILTER)
-  var items = articles.filter(isScheduleItem);
+  // 일정 아이템 필터링 (isScheduleItem + 연기/취소/중단 제외 + ETYPE_FILTER)
+  var items = articles.filter(isScheduleItem).filter(function(a){ return !isSchedExcluded(a); });
   if (ETYPE_FILTER !== '전체') {
     items = items.filter(function(a){ return (a.event_type || '') === ETYPE_FILTER; });
   }
@@ -939,9 +989,10 @@ function renderCalendar(articles) {
       var et    = a.event_type || '';
       var cls   = 'et-' + (et || 'default');
       var full  = compressTitle(a.cleaned_title || a.title || '');
-      var label = truncTitle(full, 13);
+      var prefix = et ? '[' + et + '] ' : '';
+      var label = prefix + truncTitle(full, 10);
       var idx   = storeArticle(a);
-      html += '<span class="cal-pill ' + esc(cls) + '" onclick="event.stopPropagation();openModalByIdx(' + idx + ')" title="' + esc(full) + '">' + esc(label) + '</span>';
+      html += '<span class="cal-pill ' + esc(cls) + '" onclick="event.stopPropagation();openModalByIdx(' + idx + ')" title="' + esc(et ? '['+et+'] '+full : full) + '">' + esc(label) + '</span>';
     });
     html += '</div>';
   }
@@ -978,13 +1029,19 @@ function renderIndustryTab() {
     document.getElementById('h-stat').innerHTML = '업계 <b>0</b>건';
     return;
   }
+  // 카테고리 순서 강제 정렬: 업계동향→인사→M&A→IR→규제→기술→기타
+  indFiltered.sort(function(a, b) {
+    return getIndGroup(a.cat_html || '') - getIndGroup(b.cat_html || '');
+  });
   el.innerHTML = indFiltered.map(function(a) {
     var title   = cleanT(a.cleaned_title || a.title || '');
     var cat     = a.cat_html    || '';
     var src     = a.source_name || '';
     var dateStr = fmtDate(a.pub_date || a.collected_at || '');
+    var grp     = getIndGroup(cat);
+    var cls     = IND_CAT_CLASS[grp] || 'ic-etc';
     var idx     = storeArticle(a);
-    return '<div class="ind-card" onclick="openModalByIdx(' + idx + ')">' +
+    return '<div class="ind-card ' + cls + '" onclick="openModalByIdx(' + idx + ')">' +
       '<div class="ind-header">' +
         (cat ? '<span class="ind-cat">' + esc(cat) + '</span>' : '') +
         '<span class="ind-title">' + esc(title) + '</span>' +
