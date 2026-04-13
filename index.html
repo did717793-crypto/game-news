@@ -150,47 +150,23 @@
     .month-label{font-size:13px;font-weight:800;color:var(--primary);}
     .mns{flex:1;}
 
-    /* ── BANNER SECTION ── */
-    .banner-sec-title{font-size:12px;font-weight:700;color:var(--text3);padding:10px 20px 4px;text-transform:uppercase;letter-spacing:.5px;}
-    .banner-section{padding:0 20px 8px;display:flex;gap:10px;overflow-x:auto;}
-    .banner-section:empty{display:none;}
-    .banner-section::-webkit-scrollbar{height:0;}
-    .banner-card{flex-shrink:0;width:190px;height:106px;border-radius:10px;position:relative;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;}
-    .banner-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.22);}
-    .banner-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:9px 11px;}
-    .banner-badge{font-size:9px;font-weight:900;color:#fff;background:rgba(255,255,255,.22);border-radius:8px;padding:1px 7px;width:fit-content;margin-bottom:5px;letter-spacing:.3px;}
-    .banner-title{font-size:12px;font-weight:900;color:#fff;line-height:1.25;text-shadow:0 1px 4px rgba(0,0,0,.55);}
-    .banner-date{font-size:10px;color:rgba(255,255,255,.82);margin-top:2px;}
-    .banner-genre{font-size:9px;color:rgba(255,255,255,.7);margin-top:1px;}
-
-    /* ── GANTT ── */
-    .gantt-wrap{overflow-x:auto;margin:12px 20px;border:1px solid var(--border);border-radius:8px;background:var(--gantt-bg);}
-    .gantt-head{display:grid;background:var(--gantt-head);border-bottom:1px solid var(--border);height:30px;}
-    .gantt-day{font-size:10px;font-weight:700;color:var(--text3);display:flex;align-items:center;justify-content:center;border-right:1px solid var(--border);min-width:0;}
-    .gantt-day.today-col{color:var(--accent-r);font-weight:900;}
-    .gantt-day:last-child{border-right:none;}
-    .gantt-body{position:relative;}
-    .gantt-lane{display:grid;height:28px;position:relative;border-bottom:1px solid var(--border);}
-    .gantt-lane:last-child{border-bottom:none;}
-    .gantt-cell{border-right:1px solid var(--border);opacity:.3;}
-    .gantt-cell:last-child{border-right:none;}
-    .gantt-cell.today-col{background:var(--accent-r);opacity:.08;}
-    .tl-bar{position:absolute;top:4px;height:20px;border-radius:4px;display:flex;align-items:center;overflow:hidden;cursor:pointer;transition:opacity .15s;z-index:10;}
-    .tl-bar:hover{opacity:.85;}
-    .tl-btxt{font-size:10px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px;text-shadow:0 1px 2px rgba(0,0,0,.3);}
-    .tl-today{position:absolute;top:0;bottom:0;width:2px;background:var(--today-line);z-index:20;pointer-events:none;}
-
-    /* ── NEWS LIST (일정 탭 하단) ── */
-    .news-list{padding:12px 20px;display:flex;flex-direction:column;gap:8px;}
-    .news-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:12px;}
-    .news-card:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(92,78,232,.12);}
-    .nc-left{flex:1;min-width:0;}
-    .nc-tags{display:flex;gap:4px;margin-bottom:5px;flex-wrap:wrap;}
-    .nc-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:3px;}
-    .nc-summary{font-size:12px;color:var(--text2);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-    .nc-date{font-size:11px;color:var(--text3);white-space:nowrap;margin-top:2px;}
-    .nc-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:60px;}
-    .nc-new{font-size:10px;font-weight:900;color:var(--accent-r);background:rgba(224,85,85,.1);padding:1px 6px;border-radius:10px;}
+    /* ── CALENDAR (신작 일정 탭) ── */
+    .cal-wrap{margin:12px 20px 20px;}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--border);border-left:1px solid var(--border);}
+    .cal-dow{background:var(--surface2);font-size:10px;font-weight:800;color:var(--text3);text-align:center;padding:5px 0;border-right:1px solid var(--border);border-bottom:1px solid var(--border);}
+    .cal-cell{min-height:88px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:4px;background:var(--surface);vertical-align:top;}
+    .cal-cell.out-month{background:var(--surface2);}
+    .cal-cell.out-month .cal-date{color:var(--text3);opacity:.5;}
+    .cal-cell.is-today .cal-date{background:var(--primary);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-weight:900;}
+    .cal-date{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:3px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;}
+    .cal-pill{font-size:10px;font-weight:700;border-radius:3px;padding:1px 5px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:block;color:#fff;transition:opacity .15s;}
+    .cal-pill:hover{opacity:.80;}
+    .cal-empty{padding:40px 20px;text-align:center;color:var(--text3);font-size:13px;}
+    /* 이벤트 타입별 색상 */
+    .et-출시{background:#e05555;} .et-OBT{background:#3b82f6;} .et-CBT{background:#00a878;}
+    .et-사전예약{background:#e8a020;} .et-신규서버{background:#9b59b6;}
+    .et-얼리액세스{background:#636e72;} .et-소프트론칭{background:#e91e63;}
+    .et-default{background:#8889a0;}
 
     /* ── TAB-3: 업계 뉴스 ── */
     .ind-filter{background:var(--surface);border-bottom:1px solid var(--border);padding:7px 20px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
@@ -225,10 +201,6 @@
     .empty-icon{font-size:36px;margin-bottom:8px;}
     .empty-msg{font-size:13px;}
 
-    /* ── GANTT COLORS ── */
-    .bc0{background:#5c4ee8;} .bc1{background:#e05555;} .bc2{background:#00a878;}
-    .bc3{background:#e8a020;} .bc4{background:#3b82f6;} .bc5{background:#9b59b6;}
-    .bc6{background:#e91e63;} .bc7{background:#009688;}
   </style>
 </head>
 <body>
@@ -341,17 +313,8 @@
     <button class="month-nav-btn" onclick="shiftMonth(1)" title="다음달">▶</button>
   </div>
 
-  <!-- 장르/이벤트 필터 -->
+  <!-- 이벤트 타입 필터 -->
   <div class="filter-bar">
-    <span class="filter-label">장르</span>
-    <button class="f-chip active" data-genre="전체" onclick="setGenre(this)">전체</button>
-    <button class="f-chip" data-genre="MMORPG" onclick="setGenre(this)">MMORPG</button>
-    <button class="f-chip" data-genre="수집형 RPG" onclick="setGenre(this)">수집형RPG</button>
-    <button class="f-chip" data-genre="방치형" onclick="setGenre(this)">방치형</button>
-    <button class="f-chip" data-genre="전략" onclick="setGenre(this)">전략</button>
-    <button class="f-chip" data-genre="슈팅" onclick="setGenre(this)">슈팅</button>
-    <button class="f-chip" data-genre="RPG" onclick="setGenre(this)">RPG</button>
-    <div class="filter-sep"></div>
     <span class="filter-label">이벤트</span>
     <button class="f-chip active" data-etype="전체" onclick="setEtype(this)">전체</button>
     <button class="f-chip" data-etype="사전예약" onclick="setEtype(this)">사전예약</button>
@@ -359,21 +322,12 @@
     <button class="f-chip" data-etype="OBT" onclick="setEtype(this)">OBT</button>
     <button class="f-chip" data-etype="출시" onclick="setEtype(this)">출시</button>
     <button class="f-chip" data-etype="신규서버" onclick="setEtype(this)">신규서버</button>
+    <button class="f-chip" data-etype="얼리액세스" onclick="setEtype(this)">얼리액세스</button>
+    <button class="f-chip" data-etype="소프트론칭" onclick="setEtype(this)">소프트론칭</button>
   </div>
 
-  <!-- 주요 신작 배너 -->
-  <div class="banner-sec-title" id="banner-sec-title" style="display:none;">✨ 주요 신작</div>
-  <div class="banner-section" id="banner-section"></div>
-
-  <!-- Gantt -->
-  <div class="gantt-wrap" id="gantt-wrap">
-    <div class="gantt-head" id="gantt-head"></div>
-    <div class="gantt-body" id="gantt-body"></div>
-  </div>
-
-  <!-- 신작 소식 리스트 -->
-  <div class="sec-title" id="nr-count-label">신작 소식</div>
-  <div class="news-list" id="nr-list"></div>
+  <!-- 월간 달력 -->
+  <div class="cal-wrap" id="cal-wrap"></div>
 </div>
 
 <!-- ══════════════ TAB 3: 업계 뉴스 ══════════════ -->
@@ -432,7 +386,6 @@ var RANGE_END   = null;
 // TAB-2 신작일정 월 필터
 var CUR_MONTH    = { y: new Date().getFullYear(), m: new Date().getMonth() + 1 };
 var TODAY_MONTH  = { y: new Date().getFullYear(), m: new Date().getMonth() + 1 };
-var GENRE_FILTER = '전체';
 var ETYPE_FILTER = '전체';
 
 // TAB-3 업계뉴스 카테고리
@@ -670,13 +623,6 @@ function getMonthArticles() {
 // ═══════════════════════════════════════════════════════════════════════════
 // TAB-2 장르/이벤트 필터 / TAB-3 카테고리 필터
 // ═══════════════════════════════════════════════════════════════════════════
-function setGenre(btn) {
-  document.querySelectorAll('[data-genre]').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-  GENRE_FILTER = btn.dataset.genre;
-  if (ACTIVE_TAB === 'schedule') renderScheduleTab();
-}
-
 function setEtype(btn) {
   document.querySelectorAll('[data-etype]').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
@@ -686,7 +632,6 @@ function setEtype(btn) {
 
 function applyFilters(articles) {
   return articles.filter(function(a) {
-    if (GENRE_FILTER !== '전체' && (a.genre || '') !== GENRE_FILTER) return false;
     if (ETYPE_FILTER !== '전체' && (a.event_type || '') !== ETYPE_FILTER) return false;
     return true;
   });
@@ -908,182 +853,117 @@ function renderArticleList(articles) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// TAB-2: 신작 일정 렌더 (월 기반)
+// TAB-2: 신작 일정 렌더 (월간 달력)
 // ═══════════════════════════════════════════════════════════════════════════
-var BANNER_GRADS = {
-  '출시':     'linear-gradient(135deg,#1a1a4e 0%,#5c4ee8 60%,#a78bfa 100%)',
-  'OBT':      'linear-gradient(135deg,#064e3b 0%,#00a878 60%,#34d399 100%)',
-  'CBT':      'linear-gradient(135deg,#78350f 0%,#e8a020 60%,#fcd34d 100%)',
-  '사전예약': 'linear-gradient(135deg,#500724 0%,#e05555 60%,#fca5a5 100%)',
-  '신규서버': 'linear-gradient(135deg,#0c2461 0%,#3b82f6 60%,#93c5fd 100%)',
-  'default':  'linear-gradient(135deg,#1e1e3f 0%,#5c4ee8 60%,#818cf8 100%)'
-};
-var BANNER_ET_PRIORITY = ['출시','OBT','CBT','사전예약','신규서버','얼리액세스'];
+var SCHED_ET = new Set(['사전예약','CBT','OBT','출시','신규서버','소프트론칭','얼리액세스']);
 
-function renderBanners(articles) {
-  var secTitle = document.getElementById('banner-sec-title');
-  var secEl    = document.getElementById('banner-section');
-  var items = articles.filter(function(a){ return isNewRelease(a) && a.event_type && a.event_start; });
-  items.sort(function(a,b){
-    var ai = BANNER_ET_PRIORITY.indexOf(a.event_type); if (ai<0) ai=99;
-    var bi = BANNER_ET_PRIORITY.indexOf(b.event_type); if (bi<0) bi=99;
-    if (ai !== bi) return ai - bi;
-    return new Date(a.event_start) - new Date(b.event_start);
-  });
-  var seen = new Set();
-  items = items.filter(function(a){
-    var k = compressTitle(a.cleaned_title || a.title || '');
-    if (seen.has(k)) return false; seen.add(k); return true;
-  }).slice(0, 10);
-
-  if (!items.length) { secTitle.style.display = 'none'; secEl.innerHTML = ''; return; }
-  secTitle.style.display = '';
-  secEl.innerHTML = items.map(function(a) {
-    var et    = a.event_type || '';
-    var grad  = BANNER_GRADS[et] || BANNER_GRADS['default'];
-    var title = compressTitle(a.cleaned_title || a.title || '');
-    var genre = a.genre || '';
-    var dateStr = fmtDate(a.event_start || '') + (a.event_end ? '~' + fmtDate(a.event_end) : '');
-    var idx   = storeArticle(a);
-    return '<div class="banner-card" onclick="openModalByIdx(' + idx + ')" style="background:' + esc(grad) + ';">' +
-      '<div class="banner-overlay">' +
-        '<span class="banner-badge">' + esc(et) + '</span>' +
-        '<div class="banner-title">' + esc(title) + '</div>' +
-        '<div class="banner-date">' + esc(dateStr) + '</div>' +
-        (genre ? '<div class="banner-genre">' + esc(genre) + '</div>' : '') +
-      '</div></div>';
-  }).join('');
+function isScheduleItem(a) {
+  if (!a.event_start && !a.event_end) return false;
+  return SCHED_ET.has(a.event_type || '');
 }
 
-var BAR_COLORS = ['bc0','bc1','bc2','bc3','bc4','bc5','bc6','bc7'];
-var colorMap = {}, colorIdx = 0;
-function gameColor(name) {
-  if (!colorMap[name]) { colorMap[name] = BAR_COLORS[colorIdx % BAR_COLORS.length]; colorIdx++; }
-  return colorMap[name];
+function truncTitle(t, maxLen) {
+  if (!t) return '';
+  maxLen = maxLen || 14;
+  if (t.length > maxLen) return t.slice(0, maxLen - 1) + '…';
+  return t;
 }
 
-function assignLanes(events, mStart, mEnd, totalDays) {
-  var laneEnds = [];
-  events.forEach(function(ev) {
-    var esD = kst(ev.event_start), eeD = ev.event_end ? kst(ev.event_end) : esD;
-    if (!esD) { ev._s = 1; ev._e = 1; ev.lane = 0; return; }
-    var s = esD < mStart ? 1 : esD.getDate();
-    var e = eeD > mEnd ? totalDays : eeD.getDate();
-    s = Math.max(1, s); e = Math.min(totalDays, e);
-    ev._s = s; ev._e = e;
-    var placed = false;
-    for (var i = 0; i < laneEnds.length; i++) {
-      if (laneEnds[i] < s) { ev.lane = i; laneEnds[i] = e; placed = true; break; }
-    }
-    if (!placed) { ev.lane = laneEnds.length; laneEnds.push(e); }
-  });
-  return Math.max(1, laneEnds.length);
-}
+function renderCalendar(articles) {
+  var wrap = document.getElementById('cal-wrap');
+  if (!wrap) return;
 
-function buildGantt(articles) {
-  var mStart = new Date(CUR_MONTH.y, CUR_MONTH.m - 1, 1);
-  var mEnd   = new Date(CUR_MONTH.y, CUR_MONTH.m, 0);
-  var totalDays = mEnd.getDate();
-  var todayD = today0();
-  var todayCol = (todayD >= mStart && todayD <= mEnd) ? todayD.getDate() : -1;
+  var y = CUR_MONTH.y, m = CUR_MONTH.m;
+  var firstDay  = new Date(y, m - 1, 1);
+  var lastDay   = new Date(y, m, 0);
+  var totalDays = lastDay.getDate();
+  var startDow  = firstDay.getDay(); // 0=일
+  var todayD    = today0();
 
-  var events = articles.filter(function(a) {
-    if (!isNewRelease(a) || !a.event_start) return false;
-    var esD = kst(a.event_start), eeD = a.event_end ? kst(a.event_end) : esD;
-    return esD && esD <= mEnd && eeD >= mStart;
-  });
-  events = applyFilters(events);
-  var nLanes = assignLanes(events, mStart, mEnd, totalDays);
-
-  var headEl = document.getElementById('gantt-head');
-  headEl.style.gridTemplateColumns = 'repeat(' + totalDays + ', 1fr)';
-  headEl.innerHTML = '';
-  for (var d = 1; d <= totalDays; d++) {
-    var div = document.createElement('div');
-    div.className = 'gantt-day' + (d === todayCol ? ' today-col' : '');
-    div.textContent = d;
-    headEl.appendChild(div);
+  // 일정 아이템 필터링 (isScheduleItem + ETYPE_FILTER)
+  var items = articles.filter(isScheduleItem);
+  if (ETYPE_FILTER !== '전체') {
+    items = items.filter(function(a){ return (a.event_type || '') === ETYPE_FILTER; });
   }
 
-  var bodyEl = document.getElementById('gantt-body');
-  bodyEl.innerHTML = '';
-  for (var lane = 0; lane < nLanes; lane++) {
-    var laneEl = document.createElement('div');
-    laneEl.className = 'gantt-lane';
-    laneEl.style.gridTemplateColumns = 'repeat(' + totalDays + ', 1fr)';
-    for (var d2 = 1; d2 <= totalDays; d2++) {
-      var cell = document.createElement('div');
-      cell.className = 'gantt-cell' + (d2 === todayCol ? ' today-col' : '');
-      laneEl.appendChild(cell);
-    }
-    bodyEl.appendChild(laneEl);
-  }
-
-  if (todayCol > 0) {
-    var todayLine = document.createElement('div');
-    todayLine.className = 'tl-today';
-    todayLine.style.left = ((todayCol - 0.5) / totalDays * 100).toFixed(2) + '%';
-    bodyEl.appendChild(todayLine);
-  }
-
-  var laneH = 28;
-  events.forEach(function(ev) {
-    if (ev._s === undefined) return;
-    var leftPct  = ((ev._s - 1) / totalDays * 100).toFixed(3);
-    var widthPct = ((ev._e - ev._s + 1) / totalDays * 100).toFixed(3);
-    var gn  = compressTitle(ev.cleaned_title || ev.title || '');
-    var lbl = (ev.event_type ? '[' + ev.event_type + '] ' : '') + gn;
-    var bar = document.createElement('div');
-    bar.className = 'tl-bar ' + gameColor(gn);
-    bar.style.cssText = 'left:' + leftPct + '%;width:calc(' + widthPct + '% - 2px);top:' + (ev.lane * laneH + 4) + 'px';
-    bar.innerHTML = '<span class="tl-btxt">' + esc(lbl) + '</span>';
-    (function(a){ bar.addEventListener('click', function(){ openModal(a); }); })(ev);
-    bodyEl.appendChild(bar);
-  });
-
-  bodyEl.style.height = (nLanes * laneH) + 'px';
-  if (!events.length) bodyEl.innerHTML = '<div class="empty" style="height:60px;"><div class="empty-msg">이번 달 해당 이벤트 없음</div></div>';
-}
-
-function renderScheduleNewslist(articles) {
-  var el = document.getElementById('nr-list');
-  var nrAll      = articles.filter(isNewRelease);
-  var nrFiltered = applyFilters(nrAll);
-  document.getElementById('nr-count-label').textContent = '신작 소식 ' + nrFiltered.length + '건';
-  if (!nrFiltered.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-msg">해당하는 신작 소식이 없습니다</div></div>';
+  if (!items.length) {
+    wrap.innerHTML = '<div class="cal-empty">🗓️ 이번 달 해당 일정이 없습니다</div>';
     return;
   }
-  el.innerHTML = nrFiltered.map(function(a) {
-    var title   = compressTitle(a.cleaned_title || a.title || '');
-    var et      = a.event_type || '';
-    var cat     = a.cat_html   || '';
-    var src     = a.source_name|| '';
-    var summary = a.summary    || '';
-    var dateStr = fmtDate(a.event_start || a.pub_date || a.collected_at || '');
-    var idx     = storeArticle(a);
-    return '<div class="news-card" onclick="openModalByIdx(' + idx + ')">' +
-      '<div class="nc-left">' +
-        '<div class="nc-tags">' + makeTags(cat, et, a.genre||'', src, a.is_new_event) + '</div>' +
-        '<div class="nc-title">' + esc(title) + '</div>' +
-        (summary ? '<div class="nc-summary">' + esc(summary) + '</div>' : '') +
-      '</div>' +
-      '<div class="nc-right">' +
-        (a.is_new_event ? '<span class="nc-new">NEW</span>' : '') +
-        '<span class="nc-date">' + esc(dateStr) + '</span>' +
-      '</div>' +
-    '</div>';
-  }).join('');
+
+  // 날짜별 이벤트 맵 (event_start 기준, 해당 월에 속하는 날짜만)
+  var dayMap = {};
+  items.forEach(function(a) {
+    var esD = kst(a.event_start);
+    if (!esD) return;
+    // event_start 가 이번 달이면 해당 날짜 셀에 표시
+    if (esD.getFullYear() === y && esD.getMonth() + 1 === m) {
+      var d = esD.getDate();
+      if (!dayMap[d]) dayMap[d] = [];
+      dayMap[d].push(a);
+    }
+    // event_end 가 이번 달이고 시작일이 이번 달이 아닌 경우, 종료일 셀에도 표시
+    if (a.event_end) {
+      var eeD = kst(a.event_end);
+      if (eeD && eeD.getFullYear() === y && eeD.getMonth() + 1 === m) {
+        var esYear = esD.getFullYear(), esMon = esD.getMonth() + 1;
+        if (esYear !== y || esMon !== m) {
+          var d2 = eeD.getDate();
+          if (!dayMap[d2]) dayMap[d2] = [];
+          dayMap[d2].push(a);
+        }
+      }
+    }
+  });
+
+  // 요일 헤더
+  var DOWS = ['일','월','화','수','목','금','토'];
+  var html = '<div class="cal-grid">';
+  DOWS.forEach(function(d){ html += '<div class="cal-dow">' + d + '</div>'; });
+
+  // 이전 달 빈칸
+  var prevMonthDays = new Date(y, m - 1, 0).getDate();
+  for (var i = 0; i < startDow; i++) {
+    var prevD = prevMonthDays - startDow + 1 + i;
+    html += '<div class="cal-cell out-month"><div class="cal-date">' + prevD + '</div></div>';
+  }
+
+  // 이번 달 날짜
+  for (var d = 1; d <= totalDays; d++) {
+    var cellDate = new Date(y, m - 1, d);
+    var isToday  = (cellDate.getTime() === todayD.getTime());
+    html += '<div class="cal-cell' + (isToday ? ' is-today' : '') + '">';
+    html += '<div class="cal-date">' + d + '</div>';
+    var dayItems = dayMap[d] || [];
+    dayItems.forEach(function(a) {
+      var et    = a.event_type || '';
+      var cls   = 'et-' + (et || 'default');
+      var full  = compressTitle(a.cleaned_title || a.title || '');
+      var label = truncTitle(full, 13);
+      var idx   = storeArticle(a);
+      html += '<span class="cal-pill ' + esc(cls) + '" onclick="event.stopPropagation();openModalByIdx(' + idx + ')" title="' + esc(full) + '">' + esc(label) + '</span>';
+    });
+    html += '</div>';
+  }
+
+  // 다음 달 빈칸
+  var totalCells = startDow + totalDays;
+  var remainder  = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+  for (var n = 1; n <= remainder; n++) {
+    html += '<div class="cal-cell out-month"><div class="cal-date">' + n + '</div></div>';
+  }
+
+  html += '</div>';
+  wrap.innerHTML = html;
 }
 
 function renderScheduleTab() {
   var mArticles = getMonthArticles();
   resetStore();
-  buildGantt(mArticles);
-  renderBanners(mArticles);
-  renderScheduleNewslist(mArticles);
+  renderCalendar(mArticles);
+  var cnt = mArticles.filter(isScheduleItem).length;
   document.getElementById('h-stat').innerHTML =
-    '<b>' + mArticles.length + '</b>건 / ' + CUR_MONTH.y + '.' + String(CUR_MONTH.m).padStart(2,'0');
+    '일정 <b>' + cnt + '</b>건 / ' + CUR_MONTH.y + '.' + String(CUR_MONTH.m).padStart(2,'0');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
