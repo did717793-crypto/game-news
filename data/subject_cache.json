@@ -1,0 +1,398 @@
+{
+  "일곱 개의 대죄: 오리진": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "넷마블 모바일 MMORPG",
+    "last_checked": "2026-05-28"
+  },
+  "일곱 개의 대죄:그랜드 크로스": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "넷마블 모바일 RPG",
+    "last_checked": "2026-05-28"
+  },
+  "일곱 개의 대죄: 그랜드 크로스": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "넷마블 모바일 RPG",
+    "last_checked": "2026-05-28"
+  },
+  "몬길: 스타 다이브": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "넷마블 모바일 신작",
+    "last_checked": "2026-05-28"
+  },
+  "승리의 여신: 니케": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "시프트업 모바일 슈팅 RPG",
+    "last_checked": "2026-05-28"
+  },
+  "어비스디아": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "NHN 모바일 게임",
+    "last_checked": "2026-05-28"
+  },
+  "왕좌의 게임: 킹스로드": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "넷마블 IP 라이선스 모바일 게임",
+    "last_checked": "2026-05-28"
+  },
+  "붉은사막": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "펄어비스 오픈월드 액션 RPG",
+    "last_checked": "2026-05-28"
+  },
+  "서브노티카2": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "크래프톤 퍼블리싱 생존 어드벤처",
+    "last_checked": "2026-05-28"
+  },
+  "카제나": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "스마일게이트 모바일 게임",
+    "last_checked": "2026-05-28"
+  },
+  "페블 나이츠": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "피프티원퍼센트 스팀 인디 게임",
+    "last_checked": "2026-05-28"
+  },
+  "붕괴: 스타레일": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "호요버스 턴제 RPG",
+    "last_checked": "2026-05-28"
+  },
+  "세븐나이츠 키우기": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "넷마블 방치형 RPG",
+    "last_checked": "2026-05-28"
+  },
+  "세븐나이츠 리버스": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "넷마블 모바일 RPG",
+    "last_checked": "2026-05-28"
+  },
+  "플레이투게더": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "해긴 캐주얼 소셜 게임",
+    "last_checked": "2026-05-28"
+  },
+  "레전드 오브 이미르": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "위메이드 MMORPG",
+    "last_checked": "2026-05-28"
+  },
+  "바람의나라": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "넥슨 클래식 MMORPG",
+    "last_checked": "2026-05-28"
+  },
+  "아이온2": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "엔씨소프트 MMORPG 신작",
+    "last_checked": "2026-05-28"
+  },
+  "듀엣 나이트 어비스": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "판스튜디오 모바일 RPG",
+    "last_checked": "2026-05-28"
+  },
+  "마라톤": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "Bungie FPS 신작",
+    "last_checked": "2026-05-28"
+  },
+  "프래그마타": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "캡콤 액션 RPG",
+    "last_checked": "2026-05-28"
+  },
+  "오비탈스": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "인디 게임 (리뷰 기사 확인)",
+    "last_checked": "2026-05-28"
+  },
+  "원신": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "호요버스 오픈월드 RPG",
+    "last_checked": "2026-05-28"
+  },
+  "솔라테리아": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "인디 패링 액션 RPG",
+    "last_checked": "2026-05-28"
+  },
+  "고릴테어": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "인디 솔리테어 카드 게임",
+    "last_checked": "2026-05-28"
+  },
+  "오버워치": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "블리자드 팀 슈터",
+    "last_checked": "2026-05-28"
+  },
+  "오버워치 2": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "블리자드 팀 슈터 후속작",
+    "last_checked": "2026-05-28"
+  },
+  "페어리테일 퀘스트": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "라인게임즈 모바일 게임",
+    "last_checked": "2026-05-28"
+  },
+  "스톰게이트": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "Frost Giant RTS (스타2 개발진)",
+    "last_checked": "2026-05-28"
+  },
+  "메이플 아일랜드": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "넥슨 메이플스토리 IP 모바일 게임",
+    "last_checked": "2026-05-28"
+  },
+  "출조낚시왕": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "마상소프트 낚시 모바일 게임",
+    "last_checked": "2026-05-28"
+  },
+  "임진왜란: 조선의 반격": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "조이시티 전략 게임 신작",
+    "last_checked": "2026-05-28"
+  },
+  "에픽세븐": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "스마일게이트 수집형 RPG",
+    "last_checked": "2026-05-28"
+  },
+  "창세기전 모바일 X 투신전생기": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "라인게임즈 창세기전 모바일 콜라보",
+    "last_checked": "2026-05-28"
+  },
+  "스톤에이지 키우기": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "넷마블 방치형 게임",
+    "last_checked": "2026-05-28"
+  },
+  "드래곤빌리지": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "한빛소프트 드래곤빌리지 시리즈",
+    "last_checked": "2026-05-28"
+  },
+  "소희": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "디지털터치 인디 스토리 어드벤처 (Steam/Stove 2026-03)",
+    "last_checked": "2026-05-28"
+  },
+  "메이크 드라마": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "플러피덕 개발 위메이드커넥트 서브컬처 RPG",
+    "last_checked": "2026-05-28"
+  },
+  "메이크 드라마: MAD": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "플러피덕 개발 위메이드커넥트 서브컬처 RPG 정식명",
+    "last_checked": "2026-05-28"
+  },
+  "로스트아크": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "스마일게이트 MMORPG",
+    "last_checked": "2026-05-28"
+  },
+  "배틀그라운드": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "크래프톤 배틀로얄 슈터",
+    "last_checked": "2026-05-28"
+  },
+  "리그 오브 레전드": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "라이엇게임즈 MOBA",
+    "last_checked": "2026-05-28"
+  },
+  "사이버펑크 2077": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "CD Projekt Red RPG",
+    "last_checked": "2026-05-28"
+  },
+  "엘든 링": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "From Software 액션 RPG",
+    "last_checked": "2026-05-28"
+  },
+  "나래": {
+    "subject_type": "character",
+    "confidence": "confirmed",
+    "evidence": "몬길: 스타 다이브 캐릭터",
+    "last_checked": "2026-05-28"
+  },
+  "에스카노르": {
+    "subject_type": "character",
+    "confidence": "confirmed",
+    "evidence": "일곱 개의 대죄: 오리진 플레이어블 캐릭터/보스",
+    "last_checked": "2026-05-28"
+  },
+  "갈란": {
+    "subject_type": "character",
+    "confidence": "confirmed",
+    "evidence": "일곱 개의 대죄: 오리진 보스 캐릭터",
+    "last_checked": "2026-05-28"
+  },
+  "에스데": {
+    "subject_type": "character",
+    "confidence": "confirmed",
+    "evidence": "몬길: 스타 다이브 픽업 캐릭터",
+    "last_checked": "2026-05-28"
+  },
+  "란드그리드": {
+    "subject_type": "character",
+    "confidence": "confirmed",
+    "evidence": "세븐나이츠 리버스 신규 영웅",
+    "last_checked": "2026-05-28"
+  },
+  "디아나": {
+    "subject_type": "character",
+    "confidence": "confirmed",
+    "evidence": "카제나 신규 캐릭터",
+    "last_checked": "2026-05-28"
+  },
+  "트루드": {
+    "subject_type": "character",
+    "confidence": "confirmed",
+    "evidence": "세븐나이츠 키우기 신규 영웅",
+    "last_checked": "2026-05-28"
+  },
+  "모코코": {
+    "subject_type": "character",
+    "confidence": "confirmed",
+    "evidence": "로스트아크 마스코트 캐릭터",
+    "last_checked": "2026-05-28"
+  },
+  "안란": {
+    "subject_type": "character",
+    "confidence": "confirmed",
+    "evidence": "오버워치 신규 영웅 캐릭터",
+    "last_checked": "2026-05-28"
+  },
+  "쵸비": {
+    "subject_type": "person",
+    "confidence": "confirmed",
+    "evidence": "젠지 e스포츠 LCK 미드라이너 선수",
+    "last_checked": "2026-05-28"
+  },
+  "페이커": {
+    "subject_type": "person",
+    "confidence": "confirmed",
+    "evidence": "T1 LCK 미드라이너 선수",
+    "last_checked": "2026-05-28"
+  },
+  "도란": {
+    "subject_type": "person",
+    "confidence": "confirmed",
+    "evidence": "LCK 선수 (리그 오브 레전드)",
+    "last_checked": "2026-05-28"
+  },
+  "라온": {
+    "subject_type": "brand",
+    "confidence": "confirmed",
+    "evidence": "크래프톤 AI 모델 브랜드 (오픈 소스 LLM)",
+    "last_checked": "2026-05-28"
+  },
+  "N커넥트": {
+    "subject_type": "service",
+    "confidence": "confirmed",
+    "evidence": "넥슨-SOOP 스트리머 연동 서비스 (게임 아님)",
+    "last_checked": "2026-05-28"
+  },
+  "언바운드": {
+    "subject_type": "brand",
+    "confidence": "confirmed",
+    "evidence": "시프트업이 인수한 일본 개발 스튜디오명",
+    "last_checked": "2026-05-28"
+  },
+  "PGS 3": {
+    "subject_type": "event",
+    "confidence": "confirmed",
+    "evidence": "크래프톤 배틀그라운드 e스포츠 국제 대회",
+    "last_checked": "2026-05-28"
+  },
+  "엘든 링 심포니 콘서트": {
+    "subject_type": "event",
+    "confidence": "confirmed",
+    "evidence": "엘든 링 게임음악 콘서트 이벤트",
+    "last_checked": "2026-05-28"
+  },
+  "파일럿 프로": {
+    "subject_type": "hardware",
+    "confidence": "confirmed",
+    "evidence": "엑스피펜(XPPen) 전문 편집 콘솔 (Pilot Pro 한국명)",
+    "last_checked": "2026-05-28"
+  },
+  "이것": {
+    "subject_type": "false_positive",
+    "confidence": "confirmed",
+    "evidence": "일반 지시대명사, 게임명 아님",
+    "last_checked": "2026-05-28"
+  },
+  "조이스틱": {
+    "subject_type": "item",
+    "confidence": "confirmed",
+    "evidence": "일반 게임 입력장치 용어 (하드웨어 기사에서 인용)",
+    "last_checked": "2026-05-28"
+  },
+  "요즘 미드": {
+    "subject_type": "false_positive",
+    "confidence": "confirmed",
+    "evidence": "e스포츠 미드라인 전략 표현, 게임명 아님",
+    "last_checked": "2026-05-28"
+  },
+  "를 처음 시작했다면 '이것'부터 바꾸세요.": {
+    "subject_type": "false_positive",
+    "confidence": "confirmed",
+    "evidence": "문장 전체가 따옴표로 묶인 오추출",
+    "last_checked": "2026-05-28"
+  }
+}

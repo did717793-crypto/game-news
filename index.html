@@ -358,9 +358,11 @@
 // ── CONFIG ──────────────────────────────────────────────────────────────────
 var DATA_PATH = 'data/';
 var DATES_URL = DATA_PATH + 'dates.json';
+var CACHE_URL = DATA_PATH + 'subject_cache.json';
 
 // ── STATE ───────────────────────────────────────────────────────────────────
 var ALL_ARTICLES = [];
+var SUBJECT_CACHE = {}; // { "게임명": {subject_type:"game", ...}, ... }
 var DATES_LIST   = [];
 var CUR_MONTH    = { y: new Date().getFullYear(), m: new Date().getMonth() + 1 };
 var GENRE_FILTER = '전체';
@@ -621,6 +623,61 @@ function applyFilters(articles) {
   });
 }
 
+// ── SUBJECT VERIFICATION ─────────────────────────────────────────────────────
+// 제목에서 다양한 따옴표 안 텍스트를 추출
+// 주의: 직선 ASCII 쌍따옴표(")는 인용구에 사용되므로 제외, 단따옴표/겹화살괄호만 추출
+function extractQuotedSubjects(title) {
+  if (!title) return [];
+  var results = [];
+  // 게임명은 단따옴표나 한국식 괄호를 사용. 직선/곡선 쌍따옴표는 직접 인용구에 쓰이므로 제외.
+  var sq = "[‘’‚‛']"; // 단따옴표 계열
+  var patterns = [
+    new RegExp(sq + '([^' + sq.slice(1,-1) + "]{2,40})" + sq, 'g'),
+    /《([^《》]{2,40})》/g,  // 《》
+    /『([^『』]{2,40})』/g,  // 『』
+    /「([^「」]{2,40})」/g,  // 「」
+  ];
+  patterns.forEach(function(re) {
+    var m;
+    while ((m = re.exec(title)) !== null) {
+      var s = m[1].trim();
+      if (s.length >= 2 && results.indexOf(s) === -1) results.push(s);
+    }
+  });
+  return results;
+}
+
+// 캐시에서 subject 조회. 없으면 null 반환 (unknown → 포함 처리)
+function getSubjectType(name) {
+  if (!name || !SUBJECT_CACHE[name]) return null;
+  return SUBJECT_CACHE[name].subject_type || null;
+}
+
+// 기사 제목의 따옴표 subject 중 게임인 것이 있으면 true,
+// 모두 알려진 비게임이면 false, 미확인 포함이면 null (benefit of doubt)
+function evaluateSubjects(a) {
+  var title = shortTitle(a);
+  var subjects = extractQuotedSubjects(title);
+  if (subjects.length === 0) return null; // 따옴표 없음 → 기존 로직 사용
+
+  var hasGame = false;
+  var allKnownNonGame = true;
+  for (var i = 0; i < subjects.length; i++) {
+    var stype = getSubjectType(subjects[i]);
+    if (stype === 'game') {
+      hasGame = true;
+      break;
+    }
+    if (stype === null) {
+      allKnownNonGame = false; // 미확인 subject 존재 → benefit of doubt
+    }
+    // stype이 character/person/event 등이면 allKnownNonGame 유지
+  }
+  if (hasGame) return true;
+  if (allKnownNonGame) return false; // 전부 알려진 비게임
+  return null; // 미확인 포함 → benefit of doubt → 포함
+}
+
 // ── EXCLUSION LOGIC ──────────────────────────────────────────────────────────
 function isExcluded(a) {
   if (SAFE_ET.has(a.event_type||'')) return false;
@@ -634,8 +691,27 @@ function isNewRelease(a) {
   if (a.category === '게임 회사 동향') return false;
   if (IND_CATS.has(a.category||'')) return false;
   if (isExcluded(a)) return false;
+
+  // Subject 검증: 알려진 비게임이면 제외 (필터 전용 — 신규 포함은 기존 로직에 위임)
+  if (evaluateSubjects(a) === false) return false; // 확인된 비게임 → 제외
+
+  // 기존 포함 로직 유지
   if (a.category === '신작 소식') return true;
   return a.is_new_event || NEW_ET.has(a.event_type||'');
+}
+
+// 달력(신작 일정) 포함 여부 — subject 검증 포함
+function isScheduleItem(a) {
+  var et = a.event_type || '';
+  if (SCHED_ET.indexOf(et) === -1) return false;
+  if (!a.event_start && !a.event_end) return false;
+  var titleLow = (a.cleaned_title||a.title||'').toLowerCase();
+  if (EXCL_SCHED.some(function(k){ return titleLow.indexOf(k) !== -1; })) return false;
+
+  // Subject 검증
+  var subjectResult = evaluateSubjects(a);
+  if (subjectResult === false) return false; // 알려진 비게임 → 달력 제외
+  return true; // game / unknown / 따옴표 없음 → 포함
 }
 
 function isIndustry(a) { return !isNewRelease(a); }
@@ -752,17 +828,12 @@ function buildCalendar() {
   var todayD    = today();
   var firstDow  = mStart.getDay(); // 0=일
 
-  // 달력용 이벤트 수집 (연기/취소/중단 제외, SCHED_ET 타입만)
+  // 달력용 이벤트 수집 (isScheduleItem 필터 통과한 것만)
   var dayEvents = {};
   for (var i = 1; i <= totalDays; i++) dayEvents[i] = [];
 
   ALL_ARTICLES.forEach(function(a) {
-    var et = a.event_type || '';
-    if (SCHED_ET.indexOf(et) === -1) return;
-    if (!a.event_start && !a.event_end) return;
-
-    var titleLow = (a.cleaned_title||a.title||'').toLowerCase();
-    if (EXCL_SCHED.some(function(k){ return titleLow.indexOf(k) !== -1; })) return;
+    if (!isScheduleItem(a)) return;
 
     var esD = kst(a.event_start || a.event_end);
     var eeD = a.event_end ? kst(a.event_end) : esD;
@@ -956,6 +1027,18 @@ function showSkeleton() {
   });
 }
 
+async function loadSubjectCache() {
+  try {
+    var r = await fetch(CACHE_URL + '?v=' + Date.now());
+    if (!r.ok) throw new Error('subject_cache.json not found');
+    SUBJECT_CACHE = await r.json();
+    console.log('[SubjectCache] Loaded', Object.keys(SUBJECT_CACHE).length, 'entries');
+  } catch(e) {
+    console.warn('[SubjectCache] Load failed, using empty cache:', e.message);
+    SUBJECT_CACHE = {};
+  }
+}
+
 async function loadDates() {
   try {
     var r = await fetch(DATES_URL+'?v='+Date.now());
@@ -972,6 +1055,7 @@ async function loadDates() {
 
 async function loadAllData() {
   showSkeleton();
+  await loadSubjectCache(); // subject_cache.json 먼저 로드
   var dates = await loadDates();
   if (!dates.length) {
     document.getElementById('nr-list').innerHTML =
