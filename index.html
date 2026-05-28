@@ -432,7 +432,7 @@ function stripHtml(s) {
     .trim();
 }
 
-var _PRE_RE = /^(이슈|게임\s*동향|게임동향\s*보내는\s*\S+|뉴스|단독|인터뷰)\s+/i;
+var _PRE_RE = /^(이슈|게임\s*동향|게임동향\s*보내는\s*\S+|뉴스|단독|인터뷰|리뷰|프리뷰)\s*/i;
 function cleanPrefix(s) {
   if (!s) return '';
   var prev;
@@ -442,6 +442,31 @@ function cleanPrefix(s) {
     s = s.replace(_PRE_RE, '');
   } while (s !== prev);
   return s.trim();
+}
+
+// 게임조선 cleaned_title = "게임동향 제목 ... 본문덤프" → 앞 제목만 추출
+function shortTitle(a) {
+  var raw = a.cleaned_title || a.title || '';
+  var dp = raw.indexOf(' ... ');
+  if (dp > 10 && dp < 200) raw = raw.substring(0, dp);
+  raw = raw.replace(/\.{3,}.*$/, '').replace(/＂.*$/, '').trim();
+  return stripHtml(cleanPrefix(raw)).trim();
+}
+
+// body text — 실제 필드는 body (body_text X, source_name X, link X)
+function getBodyText(a) {
+  var raw = a.body || a.body_text || a.content || a.description || '';
+  raw = stripHtml(raw);
+  // 인벤 RSS 헤더 제거
+  raw = raw.replace(/^RSS\s+주소복사.*?댓글\s*:\s*\d+\s*/i, '').trim();
+  // 자료제공 패턴 제거 (bracket 유무 모두)
+  raw = raw.replace(/\[자료제공[^\]]*\]\s*/g, '');
+  raw = raw.replace(/자료제공\s*[-=]\s*\S+\s*/g, '');
+  // 기자 (이메일) 패턴 제거
+  raw = raw.replace(/[가-힣]{2,6}\s+기자\s*\([^)]+\)\s*/g, '');
+  // ㈜ 등 법인 기호 앞 공백 정리
+  raw = raw.replace(/\(주\)|\(주\)/g, '');
+  return raw.replace(/\s+/g, ' ').trim();
 }
 
 // 배지 타입 결정
@@ -470,25 +495,73 @@ function getEtColorClass(badge) {
   return m[badge] || '';
 }
 
-// [회사명], '게임명', 핵심이벤트 형식 빌드 (구조화 데이터 있으면 우선)
+// 제목 빌드: [회사명], '게임명', 이벤트
 function buildNewsTitle(a) {
-  var company  = stripHtml(a.company || '').trim();
-  var gameName = stripHtml(a.game_name || a.game_title || '').trim();
-  if (company && gameName) {
-    var et = (a.event_type || '').trim();
-    return '[' + company + '], \'' + gameName + '\'' + (et ? ', ' + et : '');
+  // curly quote → straight quote 정규화 후 매칭
+  var t = shortTitle(a).replace(/[‘’‚‛]/g, "'");
+  // "company '게임명' rest" 패턴 (non-greedy 2~20자)
+  var m = t.match(/^(.{2,20}?)\s*'([^']{2,40})'\s*(.{0,60})$/);
+  if (m) {
+    var company = m[1].trim()
+      .replace(/\s*신작$/, '').replace(/\s*의$/, '').trim();
+    // 복합 서술어 앞: 마지막 토큰만 (예: "물벼락 서포터? 넷마블" → "넷마블")
+    var cParts = company.split(/\s+/);
+    if (cParts.length > 1) {
+      var last = cParts[cParts.length - 1];
+      if (last.length >= 2 && !/^[?!,。.…]/.test(last)) company = last;
+    }
+    var game = m[2].trim();
+    var rest = m[3].trim().replace(/^[,，\s]+/, '');
+    if (rest.length > 30) rest = rest.split(/\s+/).slice(0, 5).join(' ');
+    if (company.length >= 2 && game.length >= 2) {
+      return '[' + company + "], '" + game + "'" + (rest ? ', ' + rest : '');
+    }
   }
-  var t = stripHtml(a.cleaned_title || a.title || '');
-  return cleanPrefix(t);
+  return t.length > 80 ? t.substring(0, 78) + '…' : t;
 }
 
-// 핵심 요약 1줄 (HTML 제거 + prefix 제거 + 100자 제한)
+// 핵심 요약 1줄 (수치 > 일정 > 상태 > 첫 문장)
 function buildNewsSummary(a) {
-  var raw = stripHtml(a.summary || a.body_text || '');
-  if (!raw) return '';
-  raw = raw.replace(/\s+/g, ' ').trim();
-  if (raw.length > 100) raw = raw.substring(0, 98) + '…';
-  return raw;
+  var body   = getBodyText(a);
+  var sumRaw = stripHtml(a.summary || '');
+  var source = body || sumRaw;
+  if (!source) return '';
+
+  // 제목과 중복 첫 부분 제거
+  var shortT = shortTitle(a);
+  if (shortT.length > 10 && source.indexOf(shortT) === 0) {
+    source = source.substring(shortT.length).replace(/^[\s,\.]+/, '').trim();
+  }
+
+  function clip(s) { return s.length > 90 ? s.substring(0, 88) + '…' : s; }
+
+  // 1순위: 수치 달성/돌파 (조사 포함: 8만 명을 달성, 30만 돌파 등)
+  var nm = source.match(/[\d,]+\s*(?:만|억)\s*(?:[가-힣]{0,4}\s*)?(?:돌파|달성|가입|다운로드|이용자)/);
+  if (nm) {
+    var ni = source.indexOf(nm[0]);
+    var ns = Math.max(0, source.lastIndexOf(' ', Math.max(0, ni - 20)) + 1);
+    var sv = source.substring(ns, ni + nm[0].length + 15).trim().replace(/[.。]+$/, '');
+    if (sv.length > 8) return clip(sv);
+  }
+
+  // 2순위: 일정 (N일 출시/예정)
+  var dm = source.match(/(?:\d+월\s*)?\d+일\s*(?:정식\s*)?(?:출시|오픈|론칭|런칭|예정|시작|공개)/);
+  if (dm) {
+    var di = source.indexOf(dm[0]);
+    var ds = Math.max(0, source.lastIndexOf(' ', Math.max(0, di - 20)) + 1);
+    return clip(source.substring(ds, di + dm[0].length + 15).trim());
+  }
+
+  // 3순위: 상태 키워드
+  var stm = source.match(/(사전예약\s*(?:개시|시작|오픈|돌파)|CBT\s*(?:시작|진행|오픈)|OBT\s*(?:시작|진행|오픈)|신규\s*캐릭터\s*공개|출시\s*(?:확정|예정|발표))/);
+  if (stm) {
+    var si = source.indexOf(stm[0]);
+    return clip(source.substring(Math.max(0, si - 15), si + stm[0].length + 15).trim());
+  }
+
+  // 4순위: 첫 문장
+  var first = source.replace(/\n+/g, ' ').split(/[.。]/).find(function(s) { return s.trim().length > 15; });
+  return clip(first ? first.trim() : source);
 }
 
 function weekRange() {
@@ -558,8 +631,10 @@ function isExcluded(a) {
 }
 
 function isNewRelease(a) {
-  if (IND_CATS.has(a.cat_html||'')) return false;
+  if (a.category === '게임 회사 동향') return false;
+  if (IND_CATS.has(a.category||'')) return false;
   if (isExcluded(a)) return false;
+  if (a.category === '신작 소식') return true;
   return a.is_new_event || NEW_ET.has(a.event_type||'');
 }
 
@@ -780,8 +855,8 @@ function renderIndustryList(articles) {
     return;
   }
   el.innerHTML = articles.map(function(a) {
-    var title   = cleanT(a.cleaned_title||a.title||'');
-    var cat     = a.cat_html||'', src=a.source_name||'';
+    var title   = shortTitle(a);
+    var cat     = a.category||'', src=a.site||'';
     var dateStr = fmtDate(a.pub_date||a.collected_at||'');
     var idx     = storeArticle(a);
     return '<div class="ind-card" onclick="openModalByIdx('+idx+')">' +
@@ -823,10 +898,10 @@ function openModal(a) {
   var bCls    = getBadgeColorClass(badge);
   var title   = buildNewsTitle(a);
   var summary = buildNewsSummary(a);
-  var bodyTxt = stripHtml(a.body_text || '');
+  var bodyTxt = getBodyText(a);
   if (!bodyTxt) bodyTxt = summary ? '' : '본문 없음';
-  var src     = a.source_name || '';
-  var link    = a.link || a.url || '';
+  var src     = a.site || '';
+  var link    = a.url || '';
   var dateStr = '';
   if (a.event_start) dateStr = fmtDate(a.event_start)+(a.event_end?' ~ '+fmtDate(a.event_end):'');
   else dateStr = fmtDate(a.pub_date||a.collected_at||'');
