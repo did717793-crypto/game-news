@@ -379,6 +379,10 @@ var EXCL_HARD = ['신규 캐릭터','신규캐릭터','캐릭터 출시','캐릭
 var EXCL_SOFT = ['업데이트','패치','밸런스','이벤트 시작','이벤트 오픈','시즌 시작','시즌 오픈','점검','신규 콘텐츠','캐릭터 소개','캐릭터 공개'];
 var IND_CATS  = new Set(['업계 동향','IR','인사','M&A','규제','인터뷰','채용','기술']);
 
+// Event intent 분류 상수
+var VALID_INTENTS  = new Set(['new_game_release','pre_registration','cbt','obt','early_access','soft_launch','new_server']);
+var INTENT_INVALID = new Set(['character_update','class_update','content_update','event_campaign','esports','hardware','delay']);
+
 // ── THEME ───────────────────────────────────────────────────────────────────
 function toggleTheme() {
   var html = document.documentElement;
@@ -678,6 +682,87 @@ function evaluateSubjects(a) {
   return null; // 미확인 포함 → benefit of doubt → 포함
 }
 
+// 기사 제목에서 첫 번째 게임 subject 반환 (없으면 null)
+function getPrimaryGameSubject(a) {
+  var subjects = extractQuotedSubjects(shortTitle(a));
+  for (var i = 0; i < subjects.length; i++) {
+    var cached = SUBJECT_CACHE[subjects[i]];
+    if (cached && cached.subject_type === 'game') return subjects[i];
+    if (!cached) return subjects[i]; // 미확인 = 잠재 게임
+  }
+  return null;
+}
+
+// 기사 이벤트 의도 판별
+// 반환값: new_game_release / pre_registration / cbt / obt / early_access /
+//         soft_launch / new_server / character_update / class_update /
+//         content_update / event_campaign / esports / hardware / delay / unknown
+function detectEventIntent(a) {
+  var title = shortTitle(a);
+  var tLow  = title.toLowerCase();
+  var et    = (a.event_type || '').trim();
+
+  // ── 제외 이벤트 ────────────────────────────────────────────────────────────
+  // 출시 연기/취소/서비스 종료 ("시연기" 오탐 방지: '연기' 단독 불가, 구체 문구만 매칭)
+  if (/출시\s*연기|연기\s*(?:발표|소식|확정)|서비스\s*(?:종료|중단)|출시\s*취소/.test(tLow)) return 'delay';
+
+  // e스포츠 선수/팀/경기
+  if (/\bpom\b|e스포츠\s*(?:팀|선수)|경기\s*결과|대회\s*(?:우승|결과)|선수\s*(?:인터뷰|소감)/.test(tLow)) return 'esports';
+
+  // 하드웨어 기기 (게임 아닌 장치) — "전용 콘솔" 단독, UMPC 등
+  if (/전용\s*콘솔|\bumpc\b/.test(tLow)) return 'hardware';
+
+  // 신규 캐릭터/영웅/유닛 공개
+  if (/focus\s*on|픽업|신규\s*캐릭터|캐릭터\s*(?:pv|출시|공개)|신규\s*(?:영웅|유닛|피처)/.test(tLow)) return 'character_update';
+
+  // 신규 클래스/직업 출시 (게임 자체 출시 아님)
+  if (/신규\s*클래스|클래스\s*(?:출시|추가|공개)|신규\s*직업|직업\s*(?:출시|추가|공개)/.test(tLow)) return 'class_update';
+
+  // 스킨/외형 변경
+  if (/신규\s*스킨|스킨\s*(?:공개|출시)|외형\s*(?:수정|변경|공개|업데이트)/.test(tLow)) return 'content_update';
+
+  // 콜라보/협업
+  if (/콜라보|콜라버레이션|협업\s*이벤트/.test(tLow)) return 'event_campaign';
+
+  // 굿즈/팝업/전시/콘서트
+  if (/굿즈|팝업\s*스토어?|전시|콘서트|심포니|기념\s*(?:행사|파티)/.test(tLow)) return 'event_campaign';
+
+  // N주년 / 반주년
+  if (/(?:[0-9]+|반)\s*주년/.test(tLow)) return 'event_campaign';
+
+  // ── 허용 이벤트 (신규 게임 일정) ───────────────────────────────────────────
+  if (/사전\s*예약|사전등록/.test(tLow) || et === '사전예약') return 'pre_registration';
+  if (/\bcbt\b|클로즈드?\s*베타/.test(tLow) || et === 'CBT')  return 'cbt';
+  if (/\bobt\b|오픈\s*베타/.test(tLow)    || et === 'OBT')    return 'obt';
+  if (/얼리\s*액세스|얼액|early\s*access/.test(tLow) || et === '얼리액세스') return 'early_access';
+  if (/소프트\s*론칭|소프트론칭/.test(tLow)           || et === '소프트론칭')  return 'soft_launch';
+  if (/신규\s*서버|신서버/.test(tLow)                 || et === '신규서버')   return 'new_server';
+
+  // 게임 자체 출시/론칭
+  if (et === '출시') return 'new_game_release';
+  if (/정식\s*(?:출시|오픈|서비스|론칭)|글로벌\s*(?:출시|오픈|론칭)/.test(tLow)) return 'new_game_release';
+  if (/(?:출시|론칭|런칭)\s*(?:확정|예정|일정|발표)|스팀\s*출시|모바일\s*출시|앱\s*출시/.test(tLow)) return 'new_game_release';
+  if (/신작\s*(?:공개|발표|출시|오픈|소개)|게임\s*(?:공개|발표|티저|트레일러)/.test(tLow)) return 'new_game_release';
+
+  // 업데이트/패치/콘텐츠 (구체 패턴 없을 때)
+  if (/업데이트|패치|점검|신규\s*(?:던전|레이드|지역|맵|콘텐츠)|시즌\s*(?:시작|오픈|업데이트)/.test(tLow)) return 'content_update';
+
+  // category/is_new_event fallback
+  if (a.category === '신작 소식' || a.is_new_event) return 'new_game_release';
+
+  return 'unknown';
+}
+
+// subject=game + event intent 모두 통과해야 true
+function isValidNewGameEvent(a) {
+  var intent = detectEventIntent(a);
+  if (INTENT_INVALID.has(intent)) return false;  // 제외 이벤트
+  if (VALID_INTENTS.has(intent))  return true;   // 허용 이벤트
+  // unknown → 기존 포함 로직 (category / event_type)
+  if ((a.category || '') === '신작 소식') return true;
+  return !!(a.is_new_event || NEW_ET.has(a.event_type || ''));
+}
+
 // ── EXCLUSION LOGIC ──────────────────────────────────────────────────────────
 function isExcluded(a) {
   if (SAFE_ET.has(a.event_type||'')) return false;
@@ -687,31 +772,25 @@ function isExcluded(a) {
   return false;
 }
 
+// [1단계] subject 검증 + [2단계] event intent 검증
 function isNewRelease(a) {
   if (a.category === '게임 회사 동향') return false;
   if (IND_CATS.has(a.category||'')) return false;
   if (isExcluded(a)) return false;
-
-  // Subject 검증: 알려진 비게임이면 제외 (필터 전용 — 신규 포함은 기존 로직에 위임)
-  if (evaluateSubjects(a) === false) return false; // 확인된 비게임 → 제외
-
-  // 기존 포함 로직 유지
-  if (a.category === '신작 소식') return true;
-  return a.is_new_event || NEW_ET.has(a.event_type||'');
+  if (evaluateSubjects(a) === false) return false; // 확인된 비게임 subject → 제외
+  return isValidNewGameEvent(a);                   // event intent 검증
 }
 
-// 달력(신작 일정) 포함 여부 — subject 검증 포함
+// 달력(신작 일정): subject 검증 + event intent 검증
 function isScheduleItem(a) {
   var et = a.event_type || '';
   if (SCHED_ET.indexOf(et) === -1) return false;
   if (!a.event_start && !a.event_end) return false;
   var titleLow = (a.cleaned_title||a.title||'').toLowerCase();
   if (EXCL_SCHED.some(function(k){ return titleLow.indexOf(k) !== -1; })) return false;
-
-  // Subject 검증
-  var subjectResult = evaluateSubjects(a);
-  if (subjectResult === false) return false; // 알려진 비게임 → 달력 제외
-  return true; // game / unknown / 따옴표 없음 → 포함
+  if (evaluateSubjects(a) === false) return false;     // 비게임 subject → 제외
+  if (INTENT_INVALID.has(detectEventIntent(a))) return false; // 제외 이벤트 → 달력 제외
+  return true;
 }
 
 function isIndustry(a) { return !isNewRelease(a); }
