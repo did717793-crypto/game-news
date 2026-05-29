@@ -394,5 +394,107 @@
     "confidence": "confirmed",
     "evidence": "문장 전체가 따옴표로 묶인 오추출",
     "last_checked": "2026-05-28"
+  },
+  "에오스 레드": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "블로믹스 모바일 MMORPG",
+    "last_checked": "2026-05-29"
+  },
+  "사신 공주와 이서관의 괴물": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "니폰이치 한국어판 출시 게임",
+    "last_checked": "2026-05-29"
+  },
+  "그라나도 에스파다M": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "한빛소프트 모바일 MMORPG",
+    "last_checked": "2026-05-29"
+  },
+  "아주르 프로밀리아": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "넥슨 서브컬처 오픈월드 신작 CBT",
+    "last_checked": "2026-05-29"
+  },
+  "크롤 택틱스": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "아이스필 스튜디오 정통 SRPG 로그라이크",
+    "last_checked": "2026-05-29"
+  },
+  "넋나간 삼국지": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "바이트펀게임즈 유령 삼국 RPG",
+    "last_checked": "2026-05-29"
+  },
+  "초자연 작전팀": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "자이언트게임즈 멀티 협동 호러 게임",
+    "last_checked": "2026-05-29"
+  },
+  "여명촌": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "에스드마리스 스튜디오 조선 대기근 생존 전략 스팀 게임",
+    "last_checked": "2026-05-29"
+  },
+  "슬라임의 세계": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "마피아42 개발사 팀42 차기작 모바일 게임",
+    "last_checked": "2026-05-29"
+  },
+  "언레일드2": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "협동 철도 건설 게임 (Unrailed 2)",
+    "last_checked": "2026-05-29"
+  },
+  "보이드 다이버": {
+    "subject_type": "game",
+    "confidence": "confirmed",
+    "evidence": "얼리액세스 목표 인디 게임 (Void Diver)",
+    "last_checked": "2026-05-29"
+  },
+  "스피로스": {
+    "subject_type": "server",
+    "confidence": "confirmed",
+    "evidence": "에오스 레드 신규 서버명",
+    "last_checked": "2026-05-29"
+  },
+  "리볼도외": {
+    "subject_type": "server",
+    "confidence": "confirmed",
+    "evidence": "그라나도 에스파다M 성장 특화 신규 서버명",
+    "last_checked": "2026-05-29"
+  },
+  "바이런 2차": {
+    "subject_type": "content_update",
+    "confidence": "confirmed",
+    "evidence": "그라나도 에스파다M 업데이트 콘텐츠명",
+    "last_checked": "2026-05-29"
+  },
+  "MSI B850M 게이밍 플러스 WIFI6E": {
+    "subject_type": "hardware",
+    "confidence": "confirmed",
+    "evidence": "MSI 메인보드 하드웨어 제품명",
+    "last_checked": "2026-05-29"
+  },
+  "G512 X": {
+    "subject_type": "hardware",
+    "confidence": "confirmed",
+    "evidence": "로지텍 게이밍 키보드 제품명",
+    "last_checked": "2026-05-29"
+  },
+  "ROG Strix SCAR 및 G 시리즈": {
+    "subject_type": "hardware",
+    "confidence": "confirmed",
+    "evidence": "에이수스 ROG 게이밍 노트북 시리즈명",
+    "last_checked": "2026-05-29"
   }
 }
